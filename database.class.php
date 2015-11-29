@@ -75,7 +75,7 @@ class DB{
 	
 	/**
 	 * Select the database
-	 * @param $db (string) nome database
+	 * @param $db (string) name of database
 	 */
 	public static function selectDB($db){
 		if(self::$config['alter_schema'])
@@ -97,8 +97,8 @@ class DB{
 	
 	/**
 	 * Execute the query
-	 * @param $query (string) codice SQL
-	 * @return (object) oggetto PDO
+	 * @param $query (string) SQL code
+	 * @return (object) PDO object
 	 */
 	public static function query($query){
 
@@ -124,9 +124,9 @@ class DB{
 
 	/**
 	 * Execute the query with specific values to filtrate
-	 * @param $query (string) codice SQL
-	 * @param $a (array) array di valori
-	 * @return (object) oggetto PDO
+	 * @param $query (string) SQL code
+	 * @param $a (array) array of valus
+	 * @return (object) PDO object
 	 */
 	public static function execute($query,$a){
 		
@@ -156,7 +156,7 @@ class DB{
 	/**
 	 * Execute the query and return a result as array
 	 * @param $q (object) PDO object
-	 * @return (array) risultato
+	 * @return (array) result
 	 */
 	public static function fetch($q){
 		return $q -> fetchAll(PDO::FETCH_ASSOC);
@@ -165,7 +165,7 @@ class DB{
 	/**
 	 * Count the results of a query
 	 * @param $q (object) PDO object
-	 * @return (int) numero risultati
+	 * @return (int) number of result
 	 */
 	public static function count($q){
 		return $q -> rowCount();
@@ -182,7 +182,7 @@ class DB{
 	
 	/**
 	 * Print the error
-	 * @param $error (string) contenuto dell'errore
+	 * @param $error (string) body of the error
 	 */
 	private static function printError($error){
 		echo "<h1>DataBase error</h1>";
@@ -191,8 +191,8 @@ class DB{
 	
 	/**
 	 * Check if a table exists
-	 * @param $name (string) nome della tabella
-	 * @return (bool) la tabella esiste (true) o meno (false)
+	 * @param $name (string) name of the table
+	 * @return (bool) the table exist (true) or not (false)
 	 */
 	public static function if_table_exists($name){
 		return (self::count(self::query("SHOW TABLES LIKE '$name'")) == 1);
@@ -200,7 +200,7 @@ class DB{
 		
 	/**
 	 * Return the name of the database
-	 * @return (string) nome database
+	 * @return (string) name database
 	 */
 	public static function getName(){
 		return self::$config['database'];
@@ -208,8 +208,8 @@ class DB{
 	
 	/**
 	 * Execute the escape function
-	 * @param $s (string) stringa da filtrare
-	 * @return (string) stringa filtrata
+	 * @param $s (string) string to filtrate
+	 * @return (string) string to filtrate
 	 */
 	public static function quote($s){
 		return $s;
@@ -217,7 +217,7 @@ class DB{
 
 	/**
 	 * Get the value of the last field AUTO_INCREMENT insert
-	 * @return (int) ultimo valore del campo AUTO_INCREMENT
+	 * @return (int) last value of the field AUTO_INCREMENT
 	 */
 	public static function insert_id(){
 		return self::$con -> lastInsertId();
@@ -225,7 +225,7 @@ class DB{
 
 	/**
 	 * Return information about the database
-	 * @return (string) informazioni sul database
+	 * @return (string) information about the database
 	 */
 	public static function get_server_info(){
 		return 
@@ -235,8 +235,8 @@ class DB{
 
 	/**
 	 * Add characters of escape on the string for a query
-	 * @return $s (string) stringa da filtrare
-	 * @return (string) stringa filtrata
+	 * @return $s (string) string to filtrate
+	 * @return (string) string to filtrate
 	 */
 	public static function escapeQuery($s){
 		$s = str_replace("_","\_",$s);
@@ -265,7 +265,7 @@ class DB{
 
 	/**
 	 * Save the current status of the table
-	 * @param $table (string) nome tabella
+	 * @param $table (string) name of the table
 	 */
 	public static function save($table){
 		self::$save_name = self::_save($table);
@@ -290,7 +290,7 @@ class DB{
 
 	/**
 	 * Save a table
-	 * @param $table (string) nome tabella
+	 * @param $table (string) name of the table
 	 */
 	public static function _save($table){
 		// Salvo i dati...	
@@ -337,10 +337,10 @@ class DB{
 
 	/**
 	 * Predispose everything for a rollback
-	 * @param $n (int) numero di operazioni da cui tornare indietro
-	 * @param $id (int) identificatore dell'operazione da cui partire
-	 * @param $overwrite (bool) sovrascrivi i record durante il rollback
-	 * @return (bool) risultato dell'operazione
+	 * @param $n (int) number of operations to going back
+	 * @param $id (int) ID of the operation from which start
+	 * @param $overwrite (bool) overwrite the records during the rollback
+	 * @return (bool) result of the operation
 	 */
 	public static function rollback($n = 1,$id = NULL,$overwrite = true){
 
@@ -375,10 +375,10 @@ class DB{
 
 	/**
 	 * Check if a table or a column exists
-	 * @param $w (string) indica se si tratta di una colonna o di una tabella
-	 * @param $t (string) nome della tabella
-	 * @param $n (string) optional nome della colonna
-	 * @return (bool) l'oggetto ricercato esiste (true)
+	 * @param $w (string) indicate if is a column or a table
+	 * @param $t (string) name of the table
+	 * @param $n (string) optional name of the table
+	 * @return (bool) the reserched object exists (true)
 	 */
 	public static function exists($w,$t,$n = ''){
 		switch($w){
@@ -399,8 +399,8 @@ class DB{
 
 	/**
 	 * Check if a table exists
-	 * @param $v (string) nome della tabella
-	 * @return (bool) restituisce se la tabella esiste (true) o meno (false)
+	 * @param $v (string) name of the table
+	 * @return (bool) return if the table exists (true) or not (false)
 	 */
 	public static function hasTable($v){
 		return self::count(self::query("SHOW TABLES LIKE '{$v}'")) == 1;
@@ -408,9 +408,9 @@ class DB{
 
 	/**
 	 * Check if a column exists
-	 * @param $v1 (string) nome della tabella
-	 * @param $v2 (string) nome della colonna
-	 * @return (bool) restituisce se la colonna esiste (true) o meno (false)
+	 * @param $v1 (string) name of the table
+	 * @param $v2 (string) name of the column
+	 * @return (bool) return if the column exists (true) or not (false)
 	 */
 	public static function hasColumn($v1,$v2){
 		return self::table('information_schema.COLUMNS')
@@ -422,9 +422,9 @@ class DB{
 
 	/**
 	 * Create a new object queryBuilder
-	 * @param $v (string) nome tabella
-	 * @param $as (string) alias tabella
-	 * @return (object) oggetto queryBuilder
+	 * @param $v (string) name of the table
+	 * @param $as (string) alias of the table
+	 * @return (object) queryBuilder object
 	 */
 	public static function table($v,$as = ''){
 		return new queryBuilder($v,$as);
