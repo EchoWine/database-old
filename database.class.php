@@ -272,14 +272,14 @@ class DB{
 	}
 
 	/**
-	 * Confirm the last operation 
+	 * Confirm the last operation
 	 */
 	public static function commit(){
 		self::_delete();
 	}
 
 	/**
-	 * Bring back the status of a table before the last operation
+	 * Bring back the status of a table before the last save
 	 */
 	public static function undo(){
 		$table = self::$save_name;

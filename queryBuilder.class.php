@@ -58,7 +58,7 @@ class queryBuilder{
 		$this -> builder -> orWhere = array();
 		$this -> builder -> join = array();
 		$this -> builder -> is_table = false;
-		$this -> builder -> indexArrayResult = "";
+		$this -> builder -> indexResult = "";
 		$this -> builder -> tmp_prepare = array();
 
 		return $this;
@@ -99,8 +99,7 @@ class queryBuilder{
 	 * @return (array) risultato della query
 	 */
 	public function assoc($q,$p = NULL){
-		if(!isset($p))$p = $this -> builder -> prepare;
-		return empty($p) ? DB::fetch($q) : DB::executeAndfetch($q,$p);
+		return DB::fetch($this -> query($q,$p);
 	}
 
 	/**
@@ -123,7 +122,7 @@ class queryBuilder{
 	public function exists($v,$a){
 		$r = is_array($a) ? $this -> whereIn($v,$a) : $this -> where($v,$a);
 		$r = $r -> select($v);
-		$r = is_array($a) ? $r -> setIndexArrayResult($v) -> lists() : $r -> get();
+		$r = is_array($a) ? $r -> setIndexResult($v) -> lists() : $r -> get();
 
 		if(is_array($a)){
 
@@ -836,8 +835,8 @@ class queryBuilder{
 	 * @param $v (string) nome colonna
 	 * @return (string) nome del valore
 	 */
-	public function setIndexArrayResult($v){
-		$this -> builder -> indexArrayResult = $v;
+	public function setIndexResult($v){
+		$this -> builder -> indexResult = $v;
 		return $this;
 	}
 
@@ -847,10 +846,10 @@ class queryBuilder{
 	 */
 	public function lists(){
 		$r = $this -> assoc($this -> getSelectSQL());
-		if(!empty($this -> builder -> indexArrayResult)){
+		if(!empty($this -> builder -> indexResult)){
 			$s = array();
 			foreach($r as $n => $k){
-				$s[$k[$this -> builder -> indexArrayResult]] = $k;
+				$s[$k[$this -> builder -> indexResult]] = $k;
 			}
 
 			$r = $s;
