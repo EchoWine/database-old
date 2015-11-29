@@ -2,18 +2,18 @@
 
 /**
  * @class DB
- * Classe Database, permette di gestire la connessione e le chiamate al DBMS tramite PDO
+ * Class Database, permits to handle connections and calls to DBMS with the PDO
  */
 class DB{
 
 
 	/**
-	 * Configurazione
+	 * Configuration
 	 */
 	public static $config;
 	
 	/**
-	 * Connessione
+	 * Connection
 	 */
 	public static $con;
 	
@@ -23,27 +23,28 @@ class DB{
 	protected static $log;
 
 	/**
-	 * Oggetto contente informazioni per le query semplificate
+	 * Object that contains information for simplified query
 	 */
 	public static $exe;
 
 	/**
 	 * Oggetto per schema
+	 * #Tradurre#
 	 */
 	public static $schema;
 
 	/**
-	 * Ultimo ID tab salvato
+	 * Contains the last ID of the table and it's used for rollback
 	 */
 	public static $save_id;
 
 	/**
-	 * Ultimo nome tab salvato
+	 * Contains the last name of the table and it's used for rollback
 	 */
 	public static $save_name;
 	
 	/**
-	 * Crea una nuova connessione
+	 * Create a new connection
 	 */
 	public static function connect($cfg){
 
@@ -73,7 +74,7 @@ class DB{
 	}
 	
 	/**
-	 * Seleziona il database
+	 * Select the database
 	 * @param $db (string) nome database
 	 */
 	public static function selectDB($db){
@@ -88,14 +89,14 @@ class DB{
 	}
 	
 	/**
-	 * Chiude la connessione con il database
+	 * Close the connection of the database
 	 */
 	public static function close(){
 		self::$con = NULL;
 	}
 	
 	/**
-	 * Esegue la query
+	 * Execute the query
 	 * @param $query (string) codice SQL
 	 * @return (object) oggetto PDO
 	 */
@@ -122,7 +123,7 @@ class DB{
 	}
 
 	/**
-	 * Esegue la query con determinati valori da filtrare
+	 * Execute the query with specific values to filtrate
 	 * @param $query (string) codice SQL
 	 * @param $a (array) array di valori
 	 * @return (object) oggetto PDO
@@ -153,7 +154,7 @@ class DB{
 	}
 	
 	/**
-	 * Esegue la query e restituisce un risultato leggibile come array
+	 * Execute the query and return a result as array
 	 * @param $query (string) codice SQL
 	 * @return (array) risultato
 	 */
@@ -163,7 +164,7 @@ class DB{
 	}
 	
 	/**
-	 * Esegue la query con dei valori da filtrare e restituisce un risultato leggibile come array
+	 * Execute the query with specific values to filtrate and return the result as array
 	 * @param $query (string) codice SQL
 	 * @param $value (array) array di valori
 	 * @return (array) risultato
@@ -174,7 +175,7 @@ class DB{
 	}
 	
 	/**
-	 * Stampa i log
+	 * Print the log
 	 */
 	public static function printLog(){
 		$log = new log("Query's Log");
@@ -183,7 +184,7 @@ class DB{
 	}
 	
 	/**
-	 * Stampa l'errore
+	 * Print the error
 	 * @param $error (string) contenuto dell'errore
 	 */
 	private static function printError($error){
@@ -192,7 +193,7 @@ class DB{
 	}
 	
 	/**
-	 * Controlla l'esistenza di una tabella
+	 * Check if a table exists
 	 * @param $name (string) nome della tabella
 	 * @return (bool) la tabella esiste (true) o meno (false)
 	 */
@@ -201,7 +202,7 @@ class DB{
 	}
 		
 	/**
-	 * Conta i risultati di una query
+	 * Count the results of a query
 	 * @param $q (object) oggetto PDO
 	 * @return (int) numero risultati
 	 */
@@ -210,7 +211,7 @@ class DB{
 	}
 
 	/**
-	 * Restituisce il nome del database
+	 * Return the name of the database
 	 * @return (string) nome database
 	 */
 	public static function getName(){
@@ -218,7 +219,7 @@ class DB{
 	}
 	
 	/**
-	 * Esegue la funzione di escape
+	 * Execute the escape function
 	 * @param $s (string) stringa da filtrare
 	 * @return (string) stringa filtrata
 	 */
@@ -227,7 +228,7 @@ class DB{
 	}
 
 	/**
-	 * Ottiene il valore dell'ultimo campo AUTO_INCREMENT inserito
+	 * Get the value of the last field AUTO_INCREMENT insert
 	 * @return (int) ultimo valore del campo AUTO_INCREMENT
 	 */
 	public static function insert_id(){
@@ -235,7 +236,7 @@ class DB{
 	}
 
 	/**
-	 * Restituisce informazioni sul database
+	 * Return information about the database
 	 * @return (string) informazioni sul database
 	 */
 	public static function get_server_info(){
@@ -245,7 +246,7 @@ class DB{
 	}
 
 	/**
-	 * Aggiunge caratteri di escape alla stringa per una query
+	 * Add characters of escape on the string for a query
 	 * @return $s (string) stringa da filtrare
 	 * @return (string) stringa filtrata
 	 */
@@ -256,7 +257,7 @@ class DB{
 	}
 
 	/**
-	 * Crea la tabella che gestisce il rollback
+	 * Create the table that handle the rollback
 	 */
 	public static function iniRollback(){
 
@@ -275,7 +276,7 @@ class DB{
 	}
 
 	/**
-	 * Salva lo status attuale della tabella
+	 * Save the current status of the table
 	 * @param $table (string) nome tabella
 	 */
 	public static function save($table){
@@ -283,14 +284,14 @@ class DB{
 	}
 
 	/**
-	 * Conferma l'ultima operazione 
+	 * Confirm the last operation 
 	 */
 	public static function commit(){
 		self::_delete();
 	}
 
 	/**
-	 * Torna indietro di un'operazione
+	 * Bring back the status of a table before the last operation
 	 */
 	public static function undo(){
 		$table = self::$save_name;
@@ -300,7 +301,7 @@ class DB{
 	}
 
 	/**
-	 * Salva una tabella
+	 * Save a table
 	 * @param $table (string) nome tabella
 	 */
 	public static function _save($table){
@@ -320,7 +321,7 @@ class DB{
 	}
 	
 	/**
-	 * Elimina l'ultima operazione salvata
+	 * Delete the last saved operation
 	 */
 	public static function _delete(){
 
@@ -336,7 +337,7 @@ class DB{
 	}
 
 	/**
-	 * Effettua un rollback
+	 * Execute a rollback
 	 */
 	public static function _rollback(){
 		$table = self::$save_name;
@@ -347,7 +348,7 @@ class DB{
 	}
 
 	/**
-	 * Predispone tutto per un rollback
+	 * Predispose everything for a rollback
 	 * @param $n (int) numero di operazioni da cui tornare indietro
 	 * @param $id (int) identificatore dell'operazione da cui partire
 	 * @param $overwrite (bool) sovrascrivi i record durante il rollback
@@ -385,7 +386,7 @@ class DB{
 	}
 
 	/**
-	 * Controlla l'esistenza di una tabella o di una colonna
+	 * Check if a table or a column exists
 	 * @param $w (string) indica se si tratta di una colonna o di una tabella
 	 * @param $t (string) nome della tabella
 	 * @param $n (string) optional nome della colonna
@@ -409,7 +410,7 @@ class DB{
 	}
 
 	/**
-	 * Controlla l'esistenza di una tabella
+	 * Check if a table exists
 	 * @param $v (string) nome della tabella
 	 * @return (bool) restituisce se la tabella esiste (true) o meno (false)
 	 */
@@ -418,7 +419,7 @@ class DB{
 	}
 
 	/**
-	 * Controlla l'esistenza di una colonna
+	 * Check if a column exists
 	 * @param $v1 (string) nome della tabella
 	 * @param $v2 (string) nome della colonna
 	 * @return (bool) restituisce se la colonna esiste (true) o meno (false)
@@ -432,7 +433,7 @@ class DB{
 	}
 
 	/**
-	 * Crea un nuovo oggetto queryBuilder
+	 * Create a new object queryBuilder
 	 * @param $v (string) nome tabella
 	 * @param $as (string) alias tabella
 	 * @return (object) oggetto queryBuilder
