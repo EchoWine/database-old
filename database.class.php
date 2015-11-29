@@ -155,30 +155,27 @@ class DB{
 	
 	/**
 	 * Execute the query and return a result as array
-	 * @param $query (string) codice SQL
+	 * @param $q (object) PDO object
 	 * @return (array) risultato
 	 */
-	public static function fetch($query){
-		$c = self::query($query);
-		return $c -> fetchAll(PDO::FETCH_ASSOC);
+	public static function fetch($q){
+		return $q -> fetchAll(PDO::FETCH_ASSOC);
 	}
-	
+
 	/**
-	 * Execute the query with specific values to filtrate and return the result as array
-	 * @param $query (string) codice SQL
-	 * @param $value (array) array di valori
-	 * @return (array) risultato
+	 * Count the results of a query
+	 * @param $q (object) PDO object
+	 * @return (int) numero risultati
 	 */
-	public static function executeAndfetch($query,$value){
-		$c = self::execute($query,$value);
-		return $c -> fetchAll(PDO::FETCH_ASSOC);
+	public static function count($q){
+		return $q -> rowCount();
 	}
 	
 	/**
 	 * Print the log
 	 */
 	public static function printLog(){
-		$log = new log("Query's Log");
+		$log = new log("DataBase Log");
 		$log -> setLog(self::$log);
 		$log -> print_();
 	}
@@ -201,15 +198,6 @@ class DB{
 		return (self::count(self::query("SHOW TABLES LIKE '$name'")) == 1);
 	}
 		
-	/**
-	 * Count the results of a query
-	 * @param $q (object) oggetto PDO
-	 * @return (int) numero risultati
-	 */
-	public static function count($q){
-		return $q -> rowCount();
-	}
-
 	/**
 	 * Return the name of the database
 	 * @return (string) nome database
