@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @class queryBuilder
+ * @class QueryBuilder
  * Classe che permette la gestione delle query in maniera ben definita e semplificata
  */
-class queryBuilder{
+class QueryBuilder{
 
 	/**
 	 * Informazioni riguardanti la costruzione della query

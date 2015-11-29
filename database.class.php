@@ -421,13 +421,13 @@ class DB{
 	}
 
 	/**
-	 * Create a new object queryBuilder
+	 * Create a new object QueryBuilder
 	 * @param $v (string) name of the table
 	 * @param $as (string) alias of the table
-	 * @return (object) queryBuilder object
+	 * @return (object) QueryBuilder object
 	 */
 	public static function table($v,$as = ''){
-		return new queryBuilder($v,$as);
+		return new QueryBuilder($v,$as);
 	}
 
 }
