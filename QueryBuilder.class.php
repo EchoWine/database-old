@@ -99,7 +99,7 @@ class QueryBuilder{
 	 * @return (array) risultato della query
 	 */
 	public function assoc($q,$p = NULL){
-		return DB::fetch($this -> query($q,$p);
+		return DB::fetch($this -> query($q,$p));
 	}
 
 	/**
