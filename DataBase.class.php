@@ -283,7 +283,12 @@ class DB{
 	 */
 	public static function undo(){
 		$table = self::$save_name;
-		self::_rollback();
+		
+		$table = self::$save_name;
+		$q = self::query("SELECT * FROM database_rollback WHERE table_rollback = '{$table}'");
+		$a = $q -> fetch();
+		self::_restore($a['table_from'],$a['table_rollback']);
+
 		self::query("DROP TABLE {$table}");
 		self::query("DELETE FROM database_rollback WHERE table_rollback = '{$table}'");
 	}
@@ -293,7 +298,6 @@ class DB{
 	 * @param $table (string) name of the table
 	 */
 	public static function _save($table){
-		// Salvo i dati...	
 		do{
 			$name = md5(microtime());
 			$name = "database_rollback_{$name}";
@@ -325,18 +329,19 @@ class DB{
 	}
 
 	/**
-	 * Execute a rollback
+	 * Restore a table
+	 * @param $t1 (string) name of table to restore
+	 * @param $t2 (stirng) name of table to take data
+	 * @return (bool) result of the query
 	 */
-	public static function _rollback(){
-		$table = self::$save_name;
-		$q = self::query("SELECT * FROM database_rollback WHERE table_rollback = '{$table}'");
-		$a = $q -> fetch();
-		self::query("TRUNCATE table {$a['table_from']}");
-		self::query("INSERT {$a['table_from']} SELECT * FROM {$a['table_rollback']}");
+	public static function _restore($t1,$t2){
+
+		return self::query("TRUNCATE table {$t1}") && 
+		self::query("INSERT {$t1} SELECT * FROM {$t2}");
 	}
 
 	/**
-	 * Predispose everything for a rollback
+	 * Execute a rollback
 	 * @param $n (int) number of operations to going back
 	 * @param $id (int) ID of the operation from which start
 	 * @param $overwrite (bool) overwrite the records during the rollback
@@ -356,8 +361,7 @@ class DB{
 			self::_save($a['table_from']);
 			
 			if($overwrite){
-				$q1 = self::query("TRUNCATE table {$a['table_from']}");
-				$q2 = self::query("INSERT {$a['table_from']} SELECT * FROM {$a['table_rollback']}");
+				self::_restore($a['table_from'],$a['table_rollback']);
 			}else{
 				$q1 = true;
 				$q2 = self::query("
@@ -374,50 +378,12 @@ class DB{
 	}
 
 	/**
-	 * Check if a table or a column exists
-	 * @param $w (string) indicate if is a column or a table
-	 * @param $t (string) name of the table
-	 * @param $n (string) optional name of the table
-	 * @return (bool) the reserched object exists (true)
-	 */
-	public static function exists($w,$t,$n = ''){
-		switch($w){
-			case 'column':
-				$q = self::query("
-					SELECT * FROM information_schema.COLUMNS  WHERE 
-					TABLE_SCHEMA = '{self::getName()}' AND 
-					TABLE_NAME = '{$t}' AND
-					COLUMN_NAME = '{$n}'
-				");
-				return self::count($q) == 1;
-			break;
-			case 'table':
-				return self::if_table_exists($t);
-			break;
-		}				
-	}
-
-	/**
 	 * Check if a table exists
 	 * @param $v (string) name of the table
 	 * @return (bool) return if the table exists (true) or not (false)
 	 */
 	public static function hasTable($v){
 		return self::count(self::query("SHOW TABLES LIKE '{$v}'")) == 1;
-	}
-
-	/**
-	 * Check if a column exists
-	 * @param $v1 (string) name of the table
-	 * @param $v2 (string) name of the column
-	 * @return (bool) return if the column exists (true) or not (false)
-	 */
-	public static function hasColumn($v1,$v2){
-		return self::table('information_schema.COLUMNS')
-			-> where('TABLE_SCHEMA',self::getName())
-			-> where('TABLE_NAME',$v1)
-			-> where('COLUMN_NAME',$v2)
-			-> count() == 1;
 	}
 
 	/**
