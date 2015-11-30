@@ -66,7 +66,7 @@ class DB{
 	 * @param $db (string) name of database
 	 */
 	public static function select($db){
-		if(self::$config['alter_schema'])
+		if(self::getAlterSchema())
 			self::query("CREATE DATABASE IF NOT EXISTS $db");
 		
 		
@@ -89,6 +89,14 @@ class DB{
 	 */
 	public static function getName(){
 		return self::$config['database'];
+	}
+
+	/**
+	 * Return the value of alter_schema
+	 * @return (string) name database
+	 */
+	public static function getAlterSchema(){
+		return self::$config['alter_schema'];
 	}
 	
 	/**
@@ -152,21 +160,29 @@ class DB{
 	 */
 	public static function execute($query,$a){
 		
+		// Converto la query in una stringa leggibile
+		$r = array_reverse($a);
+		$k = array_keys($r);
+		$v = array_values($r);
+		foreach($v as &$e)
+			$e = "'{$e}'";
+
+		$q = str_replace($k,$v,$query);
+
 		try{
 
 			$r = self::$con -> prepare($query);
 			$r -> execute($a);
-			
 
 		}catch(PDOException $e){
-			self::printError("<b>Query</b>: <i>$query</i> <br><b>Value</b>: <i>".json_encode($a)."</i><br>".$e -> getMessage());
+			self::printError("<b>Query</b>: <i>$q</i><br>".$e -> getMessage());
 		}
 
 		if(!$r)
-			self::printError("<b>Query</b>: <i>$query</i><br>".self::$con -> errorInfo()[2]."");
+			self::printError("<b>Query</b>: <i>$q</i><br>".self::$con -> errorInfo()[2]."");
 		
 
-		self::$log[] = "<i>".$query." (".json_encode($a).")</i>";
+		self::$log[] = "<i>".$q."</i>";
 		return $r;
 	}
 	

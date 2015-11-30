@@ -34,11 +34,11 @@ class QueryBuilder{
 	 */
 	public function __construct($v,$as = ''){
 
-		$this -> builder = new stdObject();
+		$this -> builder = new stdClass();
 		$this -> builder -> prepare = array();
 
 		/* Controllo che si tratti di una select annidata */
-		if(is_closure($v)){
+		if(is_object($v) && ($v instanceof Closure)){
 			$t = $v();
 			$v = "(".$t -> getSelectSQL().")";
 			if(empty($as)) $as = self::getTableAsRandom();
@@ -287,7 +287,7 @@ class QueryBuilder{
 	public function where($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
 		// Se si tratta di un where avanzato
-		if(is_closure($v1)){
+		if(is_object($v1) && ($v1 instanceof Closure)){
 			$n = DB::table($this -> builder -> table);
 			$t = clone $this;
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -317,7 +317,7 @@ class QueryBuilder{
 	public function orWhere($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
 		// Se si tratta di un where avanzato
-		if(is_closure($v1)){
+		if(is_object($v1) && ($v1 instanceof Closure)){
 			$n = DB::table($this -> builder -> table);
 			$t = clone $this;
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -680,7 +680,7 @@ class QueryBuilder{
 		$t = clone $this;
 		$vkk = array();
 
-		if(is_closure($av)){
+		if(is_object($av) && ($av instanceof Closure)){
 			$c = $av();
 			$t -> builder -> prepare = array_merge($t -> builder -> prepare,$c -> builder -> prepare);
 			$vkk = "(".$c -> getSelectSQL().")";
@@ -710,22 +710,22 @@ class QueryBuilder{
 
 	/**
 	 * Esegue la query e aggiorna i record
-	 * @param $v (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
+	 * @param $v1 (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
 	 * @param $v2 (string) optional valore della colonna da aggiornare
 	 * @return (int) numero di righe coinvolte dall'aggiornamento
 	 */
-	public function update($v,$v2 = NULL){
+	public function update($v1,$v2 = NULL){
 
 		if(empty($v))return 0;
 
 		$t = clone $this;
 
-		if(!is_array($v) && isset($v2)){
-			$kf = array("{$this -> builder -> table}.{$v} = ".$t -> setPrepare($v2));
+		if(!is_array($v1) && isset($v2)){
+			$kf = array("{$this -> builder -> table}.{$v1} = ".$t -> setPrepare($v2));
 		}else{
 			$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
-			foreach($v as $k => $v){
-				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v);
+			foreach($v1 as $k => $v){
+				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v1);
 			}
 		}
 
@@ -745,25 +745,31 @@ class QueryBuilder{
 
 	/**
 	 * Esegue la query e aggiorna i record
-	 * @param $v (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
-	 * @param $v2 (string) optional valore della colonna da aggiornare
+	 * @param $v1 (array) array delle colonne da aggiornare in base a determinate condizioni
+	 * @param $v2 (array) optional valore della colonna da aggiornare
 	 * @return (int) numero di righe coinvolte dall'aggiornamento
 	 */
-	public function updateMultiple($v,$v2){
-		if(empty($v) || empty($v2))return false;
+	public function updateMultiple($v1,$v2){
+		if(empty($v1) || empty($v2))return false;
+
 		$t = clone $this;
 		$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
-		foreach($v as $k => $v){
-			$s = "{$this -> builder -> table}.$k = CASE {$v}";
-			$where = array();
-			foreach($v2[$k] as $n1 => $k1){
-				$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
-				$where[] = $t -> setPrepare($n1);
-			}
-			$s .= " ELSE {$k} END";
-			$s .= " WHERE {$v} IN(".implode(" , ",$where).")";
+		
+		foreach($v1 as $k => $v){
 
-			$kf[] = $s;
+			if(is_array($v2[$k])){
+				$s = "{$this -> builder -> table}.{$v[1]} = CASE {$v[0]}";
+
+				foreach($v2[$k] as $n1 => $k1){
+					$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
+					$where[] = $n1;
+				}
+				$s .= " ELSE {$v[1]} END";
+
+				$kf[] = $s;
+			}else{
+				$kf[] = "{$this -> builder -> table}.{$v} = ".$t -> setPrepare($v2[$k]);
+			}
 		}
 
 
@@ -772,7 +778,7 @@ class QueryBuilder{
 			".implode($t -> builder -> join," ")."
 			SET
 			".implode($kf,",")." 
-			".$this -> getWhereSQL()."
+			".$t -> getWhereSQL()."
 		");
 
 		$r = DB::count($q);
@@ -923,10 +929,10 @@ class QueryBuilder{
 	 * @return (object) $this
 	 */
 	public function column($v){
-		$this -> schema = new stdObject();
+		$this -> schema = new stdClass();
 		$this -> schema -> column = strtolower($v);
 		$this -> schema -> add = array();
-		$this -> schema -> foreign = new stdObject();
+		$this -> schema -> foreign = new stdClass();
 
 		return $this;
 	}
@@ -948,6 +954,7 @@ class QueryBuilder{
 			case 'text': $t = 'TEXT'; break;
 			case 'float': $t = "DOUBLE"; break;
 			case 'cod': $t = "VARCHAR(11)"; break;
+			case 'string': $t = "VARCHAR(80)"; break;
 		}
 
 		$this -> schema -> add[] = "{$this -> schema -> column} {$t}";
@@ -1036,7 +1043,7 @@ class QueryBuilder{
 	 * @return (object) risultato della query
 	 */
 	public function alter(){
-		if(!DB::$config['alter_schema']) return;
+		if(!DB::getAlterSchema()) return;
 
 		
 		if(!$this -> getCacheNameTable($this -> builder -> table)){
@@ -1049,7 +1056,7 @@ class QueryBuilder{
 
 		if(!$this -> hasColumn($this -> schema -> column)){
 			return $this -> query("
-				ALTER TABLE {$this -> builder -> table} ADD ".implode($this -> schema -> add,", ADD")."
+				ALTER TABLE {$this -> builder -> table} ADD ".implode($this -> schema -> add,", ADD ")."
 			");
 		}
 
