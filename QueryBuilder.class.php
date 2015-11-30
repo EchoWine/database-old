@@ -659,14 +659,11 @@ class QueryBuilder{
 		}
 
 		$ignore = $ignore ? ' IGNORE ' : '';
-		$t -> query("
+		return $t -> query("
 			INSERT {$ignore} INTO {$this -> getTableOperation()} 
 			(".implode($kf,",").") 
 			VALUES (".implode($vk,",").") 
 		");
-
-		return DB::insert_id();
-
 	}
 
 	/**
