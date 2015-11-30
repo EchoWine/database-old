@@ -814,12 +814,13 @@ class QueryBuilder{
 	
 	/**
 	 * Raggruppa i risultati con valori di una colonna specifica uguali
-	 * @param $v (string) nome della colonna coinvolta nel raggruppamento
+	 * @param $v (mixed) nome o array di nomi coinvolti nel raggruppamento
 	 * @return (object) clone di $this
 	 */
 	public function groupBy($v){
 		$t = clone $this;
-		$t -> builder -> groupBy[] = $v;
+		if(!is_array($v))$v = array($v);
+		$t -> builder -> groupBy = array_merge($t -> builder -> groupBy,$v);
 		return $t;
 	}
 
