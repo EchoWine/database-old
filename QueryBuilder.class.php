@@ -460,6 +460,18 @@ class QueryBuilder{
 	}
 	
 	/**
+	 * Aggiunge una condizione OR WHERE IS NULL alla query dove i risultati devono avere il valore della
+	 * colonna nullo
+	 * @param $v (string) nome della colonna
+	 * @return (object) clone di $this
+	 */
+	public function orWhereIsNull($v){
+		$t = clone $this;
+		$t -> builder -> orWhere[] = "({$v} IS NULL)";
+		return $t;
+	}
+
+	/**
 	 * Aggiunge una condizione WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
 	 * colonna non nullo
 	 * @param $v (string) nome della colonna
@@ -468,6 +480,18 @@ class QueryBuilder{
 	public function whereIsNotNull($v){
 		$t = clone $this;
 		$t -> builder -> andWhere[] = "({$v} IS NOT NULL)";
+		return $t;
+	}
+	
+	/**
+	 * Aggiunge una condizione OR WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
+	 * colonna non nullo
+	 * @param $v (string) nome della colonna
+	 * @return (object) clone di $this
+	 */
+	public function orWhereIsNotNull($v){
+		$t = clone $this;
+		$t -> builder -> orWhere[] = "({$v} IS NOT NULL)";
 		return $t;
 	}
 
