@@ -53,7 +53,7 @@ class DB{
 			);
 			
 		}catch(PDOException $e){
-			self::printError("<b>You can't connect to the host</b><br>".$e->getMessage(),false);
+			self::printError("<b>You can't connect to the host</b><br>".$e->getMessage());
 		}
 
 		self::select($cfg['database']);
@@ -115,7 +115,7 @@ class DB{
 	 * @return $s (string) string to filtrate
 	 * @return (string) string to filtrate
 	 */
-	public static function escapeQuery($s){
+	public static function escape($s){
 		$s = str_replace("_","\_",$s);
 		$s = str_replace("%","\%",$s);
 		return $s;
@@ -192,22 +192,18 @@ class DB{
 	 * Print the log
 	 */
 	public static function printLog(){
-		$log = new log("DataBase Log");
-		$log -> setLog(self::$log);
-		$log -> print_();
+		echo "<h1>DataBase Log</h1>";
+		echo implode(self::$log,"<br>");
 	}
 	
 	/**
 	 * Print the error
 	 * @param $error (string) body of the error
-	 * @param $backtrace (bool) print backtrace
 	 */
-	private static function printError($error,$backtrace = true){
-		echo "<h1>DataBase error</h1>";
-		echo $error;
-
-		if($backtrace)
-			error_backtrace();
+	private static function printError($error){
+		echo "<h1>DataBase Error</h1>";
+		echo $error."<br>";
+		// throw new Exception($error);
 		die();
 	}
 		
@@ -373,5 +369,4 @@ class DB{
 	}
 
 }
-
 ?>
