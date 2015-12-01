@@ -2,35 +2,35 @@
 
 /**
  * @class queryBuilder
- * Classe che permette la gestione delle query in maniera ben definita e semplificata
+ * Class that permits the handle of the query in a defined and semplified way
  */
 class queryBuilder{
 
 	/**
-	 * Informazioni riguardanti la costruzione della query
+	 * Infomation about the creation of the query
 	 */
 	public $builder;
 
 	/**
-	 * Informazioni riguardanti l'alterazione dello schema del DB
+	 * Information about the alteration of the DB pattern
 	 */
 	public $schema;
 
 	/**
-	 * Lista di tutti i nomi delle tabelle la quale esistenza è già stata verificata
+	 * List of all the names of the tables which existence is known
 	 */
 	public static $cacheAlter = array();
 
 	/**
-	 * Lista di tutti gli alias creati automaticamente per le select annidate
+	 * List of all the alias made automatically for the nested selection query
 	 */
 	public static $tableAs = array();
 
 	/**
-	 * Inizializza l'oggetto, viene richiamata dal metodo table della classe DataBase 
-	 * @param $v (string) nome della tabella
-	 * @param $as (string) optional alias della tabella
-	 * @return (string) nome alias della tabella
+	 * Initializes the object, the call is made from the method table of the class Database
+	 * @param $v (string) name of the table
+	 * @param $as (string) optional alias of the table
+	 * @return (string) name alias of the table
 	 */
 	public function __construct($v,$as = ''){
 
@@ -65,8 +65,8 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Restituisce un nome random(che non è stato ancora usato) da usare come alias per le query 
-	 * @return (string) nome alias della tabella
+	 * Return a random name (unused) to use as alias for the query
+	 * @return (string) alias name of the table
 	 */
 	public static function getTableAsRandom(){
 		$c = "t".count(self::$tableAs);
@@ -75,15 +75,15 @@ class queryBuilder{
 	}
 
 	/**
-	 * Clona l'attributo builder
+	 * Clone  the attribute builder
 	 */
 	public function __clone(){
 		$this -> builder = clone $this -> builder;
 	}
 
 	/**
-	 * Esegue la query
-	 * @return (object) risultato della query
+	 * Execute the query
+	 * @return (object) result of the query
 	 */
 	public function query($q,$p = NULL){
 		if(!isset($p))$p = $this -> builder -> prepare;
@@ -93,19 +93,19 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e converte il risultato in un array
-	 * @param $q (string) query da eseguire
-	 * @param $p (array) array di valori da preparare
-	 * @return (array) risultato della query
+	 * Execute the query and convert the result in an array
+	 * @param $q (string) query to execute
+	 * @param $p (array) array of values to preparare
+	 * @return (array) result of the query
 	 */
 	public function assoc($q,$p = NULL){
 		return DB::fetch($this -> query($q,$p);
 	}
 
 	/**
-	 * Prepara un valore per essere immesso nel codice SQL. Usato nelle chiamte PDO
-	 * @param $v (string) valore
-	 * @return (string) nome del valore
+	 * Prepare a value to be insert in the SQL code. Used in the PDO calls
+	 * @param $v (string) value
+	 * @return (string) name of the value
 	 */
 	public function setPrepare($v){
 		$l = ":p".count($this -> builder -> prepare);
@@ -115,9 +115,10 @@ class queryBuilder{
 
 	/**
 	 * Esegue la query e ritorna se il record esiste o meno
-	 * @param $v (string) nome della colonna
-	 * @param $a (mixed) valore o array di valori che identificano la colonna
-	 * @return (mixed) bool se è un solo valore o array di bool se è un array di record
+	 * Execute the query and return if the record exists or not
+	 * @param $v (string) name of the column
+	 * @param $a (mixed) value or array of value that identified the column
+	 * @return (mixed) bool if is only a value or array of bool if is an array of records
 	 */
 	public function exists($v,$a){
 		$r = is_array($a) ? $this -> whereIn($v,$a) : $this -> where($v,$a);
@@ -138,10 +139,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e ritorna il numero dei record presenti nella tabella, se la colonna è specificata
-	 * ritorna il numero dei record con il valore della colonna non nullo
-	 * @param $v (string) nome della colonna
-	 * @return (int) numero dei record
+	 * Execute the query and return the number of record in the table, if the column is specified
+	 * return the number of record with the column's value not null
+	 * @param $v (string) name of the column
+	 * @return (int) number of records
 	 */
 	public function count($v = '*'){
 		return $this -> selectFunction($v,'COUNT');
@@ -149,45 +150,45 @@ class queryBuilder{
 
 	
 	/**
-	 * Esegue la query e ritorna il valore minimo di una colonna specifica
-	 * @param $v (string) nome della colonna
-	 * @return (mixed) valore minimo dei valori di una colonna
+	 * Execute the query and return the lower value in a specific column
+	 * @param $v (string) name of the column
+	 * @return (mixed) lower value of all values in a column
 	 */
 	public function min($v){
 		return $this -> selectFunction($v,'MIN');
 	}
 
 	/**
-	 * Esegue la query e ritorna il valore massimo di una colonna specifica
-	 * @param $v (string) nome della colonna
-	 * @return (mixed) valore massimo dei valori di una colonna
+	 * Execute the query and return the max values of a specific column
+	 * @param $v (string) name of the column
+	 * @return (mixed) max value of all values in a column
 	 */
 	public function max($v){
 		return $this -> selectFunction($v,'MAX');
 	}
 
 	/**
-	 * Esegue la query e ritorna il valore medio di una colonna specifica
-	 * @param $v (string) nome della colonna
-	 * @return (float) valore medio dei valori di una colonna
+	 * Execute the query and return the average value in a specific column
+	 * @param $v (string) name of the column
+	 * @return (float) average value of all values in a column
 	 */
 	public function avg($v){
 		return $this -> selectFunction($v,'AVG');
 	}
 
 	/**
-	 * Esegue la query e ritorna la somma dei valori di una colonna specifica
-	 * @param $v (string) nome della colonna
-	 * @return (float) somma dei valori di una colonna
+	 * Execute the query and return the summation of the values in a specific column
+	 * @param $v (string) name of the column
+	 * @return (float) sum of the values in a column
 	 */
 	public function sum($v){
 		return $this -> selectFunction($v,'SUM');
 	}
 	
 	/**
-	 * Esegue la query e ritorna il risultato di una funzione sui dei valori di una colonna specifica
-	 * @param $v (string) nome della colonna
-	 * @param $f (string) funzione
+	 * Execute the query and return the result of a method applied in some values of a specific column
+	 * @param $v (string) name of the function
+	 * @param $f (string) function
 	 * @return (object) $this
 	 */
 	public function selectFunction($v,$f){
@@ -200,8 +201,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Ordina i risultati per ordine crescente
-	 * @param $v (string) nome della colonna
+	 * Arrange the results in ascending order
+	 * @param $v (string) name of the column
 	 * @return (object) $this
 	 */
 	public function orderByAsc($c){
@@ -211,7 +212,8 @@ class queryBuilder{
 
 	/**
 	 * Ordina i risultati per ordine decrescente
-	 * @param $v (string) nome della colonna
+	 * Arrange the results in descending order
+	 * @param $v (string) name of the column
 	 * @return (object) $this
 	 */
 	public function orderByDesc($c){
@@ -220,8 +222,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Restituisce il codice SQL per l'ordinamento
-	 * @return (string) codice SQL
+	 * Return the SQL code for sorting
+	 * @return (string) SQL code
 	 */
 	public function getOrderBySQL(){
 		$o = $this -> builder -> orderby;
@@ -229,8 +231,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge alla query una colonna da selezionare
-	 * @param $a (mixed) contiene la lista delle colonne da aggiungere o una singoloa colonna
+	 * Add a column to select on the query
+	 * @param $a (mixed) contains the list of all the column to add or a single column
 	 * @return (object) $this
 	 */
 	public function select($a){
@@ -245,8 +247,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Salta un numero di risultati della query definito dal parametro
-	 * @param $v (int) numero di risultati da saltare
+	 * Jump a number of results of the query defined by the parameter
+	 * @param $v (int) number of results to jump
 	 * @return (object) $this
 	 */
 	public function skip($v){
@@ -255,8 +257,8 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Prendi un numero di risultati della query definito dal parametro
-	 * @param $v (int) numero di risultati da prendere
+	 * Take a specific number of results of the query defined by the parameter
+	 * @param $v (int) number of results to take
 	 * @return (object) $this
 	 */
 	public function take($v){
@@ -266,8 +268,8 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Restituisce il codice SQL per selezionare un range di risultati definito da skip e take
-	 * @return (string) codice SQL
+	 * Return the SQL code for select a range of results defined by skip and take
+	 * @return (string) SQL code
 	 */
 	public function getLimitSQL(){
 		$s = isset($this -> builder -> skip) ? $this -> builder -> skip."," : "";
@@ -276,11 +278,11 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione WHERE AND alla query dove i risultati devono avere un valore di una colonna
-	 * ben specifico. Il risultato cambia a seconda dei parametri
-	 * @param $v1 (mixed) Indica il nome della colonna o una closure eseguita per funzioni where avanzate. 
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto, altrimenti il valore colonna
-	 * @param $v3 (string) optional valore della colonna
+	 * Add a condition WHERE AND to the query where the results must have a specific value of a column.
+	 * The result may change with the change of the parameters
+	 * @param $v1 (mixed) Indicate the name of the column or a closure execute by advanced where methods. 
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param $v3 (string) optional value of the column
 	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
 	 * @return (object) $this
 	 */
@@ -306,11 +308,11 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione WHERE OR alla query dove i risultati devono avere un valore di una colonna
-	 * ben specifico. Il risultato cambia a seconda dei parametri
-	 * @param $v1 (mixed) Indica il nome della colonna o una closure eseguita per funzioni where avanzate. 
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto, altrimenti il valore colonna
-	 * @param $v3 (string) optional valore della colonna
+	 * Add a WHERE OR condition to the query where the results must have a value of a specific column.
+	 * The result may change with the change of the parameters
+	 * @param $v1 (mixed) Indicate the name of the column or a closure execute by advanced where methods. 
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param $v3 (string) optional value of the column
 	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
 	 * @return (object) $this
 	 */
@@ -336,14 +338,14 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione WHERE alla query dove i risultati devono avere un valore di una colonna
-	 * ben specifico. Il risultato cambia a seconda dei parametri
-	 * @param $v1 (string) se $v2 è definito indica il nome colonna, altrimenti il valore della colonna primaria
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto, altrimenti il valore colonna
-	 * @param $v3 (string) optional valore della colonna
+	 * Add a WHERE condition to the query where the results must have a value of specific column.
+	 * The result may change with the change of the parameters
+	 * @param $v1 (string) if $v2 is defined indicates the name of the column, otherwise the value of the primary column
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param $v3 (string) optional value of the column
 	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
-	 * @param $v5 (string) tipo di where AND|OR
-	 * @return (object) clone di $this
+	 * @param $v5 (string) type of where AND|OR
+	 * @return (object) clone of $this
 	 */
 	public function _where($v1,$v2 = NULL,$v3 = NULL,$v4 = true,$ao){
 		$t = clone $this;
@@ -390,11 +392,10 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Aggiunge una condizione WHERE IN alla query dove i risultati devono avere il valore della 
-	 * colonna specificata presente nella lista di elementi
-	 * @param $v (string) nome della colonna
-	 * @param $a (array) array di valori accettati
-	 * @return (object) clone di $this
+	 * Add a condition WHERE IN to the query where the results must have a value of the specific column present on the list of elements
+	 * @param $v (string) name of the column
+	 * @param $a (array) array of accepted values
+	 * @return (object) clone of $this
 	 */
 	public function whereIn($v,$a){
 		$t = clone $this;
@@ -405,11 +406,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione OR WHERE IN alla query dove i risultati devono avere il valore della 
-	 * colonna specificata presente nella lista di elementi
-	 * @param $v (string) nome della colonna
-	 * @param $a (array) array di valori accettati
-	 * @return (object) clone di $this
+	 * Add a condition OR WHERE IN to the query where the results must have a value of the specific column present on the list of elements
+	 * @param $v (string) name of the column
+	 * @param $a (array) array of accepted values
+	 * @return (object) clone of $this
 	 */
 	public function orWhereIn($v,$a){
 		$t = clone $this;
@@ -420,11 +420,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione WHERE LIKE alla query dove i risultati devono avere il valore della 
-	 * colonna specificata presente nella lista di elementi
-	 * @param $v1 (string) nome della colonna
-	 * @param $v2 (string) valore ricercato
-	 * @return (object) clone di $this
+	 * Add a condition WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
+	 * @param $v1 (string) name of the column
+	 * @param $v2 (string) reserched value
+	 * @return (object) clone of $this
 	 */
 	public function whereLike($v1,$v2){
 
@@ -434,11 +433,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione OR WHERE LIKE alla query dove i risultati devono avere il valore della 
-	 * colonna specificata presente nella lista di elementi
-	 * @param $v1 (string) nome della colonna
-	 * @param $v2 (string) valore ricercato
-	 * @return (object) clone di $this
+	 * Add a condition OR WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
+	 * @param $v1 (string) name of the column
+	 * @param $v2 (string) reserched value
+	 * @return (object) clone of $this
 	 */
 	public function orWhereLike($v1,$v2){
 
@@ -448,10 +446,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge una condizione WHERE IS NULL alla query dove i risultati devono avere il valore della
-	 * colonna nullo
-	 * @param $v (string) nome della colonna
-	 * @return (object) clone di $this
+	 * Add a condition WHERE IS NULL to the query where the results must have a null value in the column
+	 * @param $v (string) name of the column
+	 * @return (object) clone of $this
 	 */
 	public function whereIsNull($v){
 		$t = clone $this;
@@ -460,10 +457,9 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Aggiunge una condizione WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
-	 * colonna non nullo
-	 * @param $v (string) nome della colonna
-	 * @return (object) clone di $this
+	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
+	 * @param $v (string) name of the column
+	 * @return (object) clone of $this
 	 */
 	public function whereIsNotNull($v){
 		$t = clone $this;
@@ -472,9 +468,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Innietta del codice sql per una condizione AND WHERE alla query
-	 * @param $v (string) codice sql
-	 * @return (object) clone di $this
+	 * Inject a SQL code for obtain a condition AND WHERE to the query 
+	 * @param $v (string) SQL code
+	 * @return (object) clone of $this
 	 */
 	public function whereRaw($v){
 		$t = clone $this;
@@ -483,9 +479,9 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Innietta del codice sql per una condizione OR WHERE alla query
-	 * @param $v (string) codice sql
-	 * @return (object) clone di $this
+	 * Inject a SQL code for obtain a condition OR WHERE to the query 
+	 * @param $v (string) SQL code
+	 * @return (object) clone of $this
 	 */
 	public function orWhereRaw($v){
 		$t = clone $this;
@@ -494,9 +490,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Ritorna il codice SQL per la condizione WHERE
-	 * @param $where (bool) indica se è necessario aggiungere il comando WHERE (true, di default) o no (false)
-	 * @return (string) codice SQL
+	 * Return the SQL code for the condition WHERE
+	 * @param $where (bool) indicates if is necessary add a WHERE comand (true, by default) or not (false)
+	 * @return (string) SQL code
 	 */
 	private function getWhereSQL($where = true){
 		$s = $where ? ' WHERE ' : '';
@@ -515,10 +511,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Incrementa il valore della colonna
-	 * @param $c (string) nome della colonna
-	 * @param $v (array) valore di incremento
-	 * @return (object) clone di $this
+	 * Incements the value of the column
+	 * @param $c (string) name of the column
+	 * @param $v (array) value of increment
+	 * @return (object) clone of $this
 	 */
 	public function increment($c,$v = 1){
 		$t = clone $this;
@@ -527,10 +523,10 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Decrementa il valore della colonna
-	 * @param $c (string) nome della colonna
-	 * @param $v (array) valore di decremento
-	 * @return (object) clone di $this
+	 * Decrease the value of the column
+	 * @param $c (string) name of the column
+	 * @param $v (array) value of decrease
+	 * @return (object) clone of $this
 	 */
 	public function decrement($c,$v = 1){
 		$t = clone $this;
@@ -546,12 +542,12 @@ class queryBuilder{
 	}
 
 	/**
-	 * Effettua una LEFT JOIN con un'altra tabella
-	 * @param $t (string) nome della tabella secondaria
-	 * @param $v1 (string) nome della colonna della tabella primaria
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto delle colonne, altrimenti il nome della colonna della tabella secondaria
-	 * @param $v3 (string) optional nome della colonna della tabella secondaria
-	 * @param $v4 (bool) optional indica se assegnare automaticamente le tabella alle colonne (true) o no (false)
+	 * Effect a LEFT JOIN with an other table
+	 * @param $t (string) name of the second table
+	 * @param $v1 (string) name of the column of the primary table
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param $v3 (string) optional name of the column of the second table
+	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
 	public function leftJoin($t,$v1,$v2,$v3 = NULL,$v4 = true){
@@ -559,12 +555,12 @@ class queryBuilder{
 	}
 
 	/**
-	 * Effettua una RIGHT JOIN con un'altra tabella
-	 * @param $t (string) nome della tabella secondaria
-	 * @param $v1 (string) nome della colonna della tabella primaria
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto delle colonne, altrimenti il nome della colonna della tabella secondaria
-	 * @param $v3 (string) optional nome della colonna della tabella secondaria
-	 * @param $v4 (bool) optional indica se assegnare automaticamente le tabella alle colonne (true) o no (false)
+	 * Effect a RIGHT JOIN with an other table
+	 * @param $t (string) name of the second table
+	 * @param $v1 (string) name of the column of the primary table
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param $v3 (string) optional name of the column of the second table
+	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
 	public function rightJoin($t,$v1,$v2,$v3 = NULL,$v4 = true){
@@ -572,12 +568,12 @@ class queryBuilder{
 	}
 
 	/**
-	 * Effettua una JOIN con un'altra tabella
-	 * @param $t (string) nome della tabella secondaria
-	 * @param $v1 (string) nome della colonna della tabella primaria
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto delle colonne, altrimenti il nome della colonna della tabella secondaria
-	 * @param $v3 (string) optional nome della colonna della tabella secondaria
-	 * @param $v4 (bool) optional indica se assegnare automaticamente le tabella alle colonne (true) o no (false)
+	 * Effect a JOIN with an other table
+	 * @param $t (string) name of the second table
+	 * @param $v1 (string) name of the column of the primary table
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param $v3 (string) optional name of the column of the second table
+	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
 	public function join($t,$v1,$v2,$v3 = NULL,$v4 = true){
@@ -585,14 +581,14 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge il codice SQL per una JOIN|LEFT JOIN|RIGHT JOIN
-	 * @param $ACT (string) tipo di JOIN
-	 * @param $table (string) nome della tabella secondaria
-	 * @param $v1 (string) nome della colonna della tabella primaria
-	 * @param $v2 (string) se $v3 è definito indica l'operatore di confronto delle colonne, altrimenti il nome della colonna della tabella secondaria
-	 * @param $v3 (string) optional nome della colonna della tabella secondaria
-	 * @param $v4 (bool) optional indica se assegnare automaticamente le tabella alle colonne (true) o no (false)
-	 * @return (object) clone di $this
+	 * Add a SQL code for a JOIN|LEFT JOIN|RIGHT JOIN
+	 * @param $ACT (string) type of JOIN
+	 * @param $table (string) name of the secondary table
+	 * @param $v1 (string) name of the column of the primary table
+	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param $v3 (string) optional name of the column of the second table
+	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
+	 * @return (object) clone of $this
 	 */
 	public function _join($ACT,$table,$v1,$v2,$v3 = NULL,$v4 = true){
 
@@ -617,8 +613,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e inserisce un record ignorando possibili duplicati
-	 * @param $v (string) array di elementi da inserire (nome colonna => valore colonna)
+	 * Execute the query and insert a record ignoring duplicates
+	 * @param $v (string) array of elements to insert (name column => value column)
 	 * @return (object) $this
 	 */
 	public function insertIgnore($v){
@@ -626,10 +622,10 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Esegue la query e inserisce un record se non è presente nessun record, altrimenti aggiorna
-	 * @param $v (string) array di elementi da inserire|aggiornare (nome colonna => valore colonna)
-	 * @param $ignore (bool) se impostato richiama insertIgnore(true) o insert(false)
-	 * @return (int) numero di risultati affetti dalla query(update) o ultimo id inserito(insert)
+	 * Execute the query and insert a record if isn't present any record, otherwise update
+	 * @param $v (string) array of elements to insert|update (name column => value column)
+	 * @param $ignore (bool) if set recall insertIgnore(true) or insert(false)
+	 * @return (int) number of result affected from the query(update) or last ID insert(insert)
 	 */
 	public function insertUpdate($v,$ignore = false){
 		return $this -> count() == 0
@@ -640,10 +636,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e inserisce un record
-	 * @param $a (array) array di elementi da inserire (nome colonna => valore colonna)
-	 * @param $ignore (bool) ignora i duplicati(true) o riproduce un errore(false)
-	 * @return (int) ultimo id inserito
+	 * Execute the query and insert a record
+	 * @param $a (array) array of elements to insert (name column => value column)
+	 * @param $ignore (bool) ignore the duplicates(true) or reproduce an error(false)
+	 * @return (int) last id insert
 	 */
 	public function insert($a,$ignore = false){
 
@@ -670,11 +666,11 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e inserisce almeno un record
-	 * @param $nv (array) array costituito dai nomi delle colonne da inserire
-	 * @param $av (array) array costituito da un array di valori per ogni riga
-	 * @param $ignore (bool) ignora i duplicati(true) o riproduce un errore(false)
-	 * @return (int) ultimo id inserito
+	 * Execute the query and insert at least a record
+	 * @param $nv (array) array made from the names of the column to insert
+	 * @param $av (array) array made from an array of values for each row
+	 * @param $ignore (bool) ignore the duplicates(true) or reproduce an error(false)
+	 * @return (int) last ID insert
 	 */
 	public function insertMultiple($nv,$av,$ignore = false){
 		
@@ -712,10 +708,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e aggiorna i record
-	 * @param $v (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
-	 * @param $v2 (string) optional valore della colonna da aggiornare
-	 * @return (int) numero di righe coinvolte dall'aggiornamento
+	 * Execute the query and update the record
+	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
+	 * @param $v2 (string) optional value of the column to update
+	 * @return (int) number of row involved in the update
 	 */
 	public function update($v,$v2 = NULL){
 
@@ -747,10 +743,10 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e aggiorna i record
-	 * @param $v (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
-	 * @param $v2 (string) optional valore della colonna da aggiornare
-	 * @return (int) numero di righe coinvolte dall'aggiornamento
+	 * Execute the query and update the records
+	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
+	 * @param $v2 (string) optional value of the column to update
+	 * @return (int) number of row involved in the update
 	 */
 	public function updateMultiple($v,$v2){
 		if(empty($v) || empty($v2))return false;
@@ -785,9 +781,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e elimina i record selezionati
-	 * @param $v (string) optional indica il nome della tabella al quale eliminare i record (usato nelle join)
-	 * @return (int) numero di righe coinvolte dall'eliminazione
+	 * Execute the query and delete the selected records
+	 * @param $v (string) optional indicates the name of the table from which delete the records (used in the join)
+	 * @return (int) number of rows involved in the elimination
 	 */
 	public function delete($v = ''){
 		if(empty($v)) $v = $this -> getTableOperation();
@@ -799,9 +795,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query eliminazione
-	 * @param $v (string) optional indica il nome della tabella al quale eliminare i record (usato nelle join)
-	 * @return (int) numero di righe coinvolte dall'eliminazione
+	 * Execute the elimination query
+	 * @param $v (string) optional indicates the name of the table from which delete the records (used in the join)
+	 * @return (int) number of rows involved in the elimination
 	 */
 	public function truncate(){
 		return $this -> query("
@@ -810,9 +806,9 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Raggruppa i risultati con valori di una colonna specifica uguali
-	 * @param $v (string) nome della colonna coinvolta nel raggruppamento
-	 * @return (object) clone di $this
+	 * Regroup the same results from a specific column 
+	 * @param $v (string) name of the column involved in the regroup
+	 * @return (object) clone of $this
 	 */
 	public function groupBy($v){
 		$t = clone $this;
@@ -821,8 +817,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Restituisce il codice SQL da eseguire per il raggruppamento
-	 * @return (string) codice SQL
+	 * Return the SQL code to execute the regroup
+	 * @return (string) SQL code
 	 */
 	public function getGroupBySQL(){
 		$s = implode($this -> builder -> groupBy," , ");
@@ -831,9 +827,9 @@ class queryBuilder{
 	}
 	
 	/**
-	 * Configura la colonna che andrà ad occupare l'indice dell'array dei risultati
-	 * @param $v (string) nome colonna
-	 * @return (string) nome del valore
+	 * Configure the column which will occupy the index of the array with the results
+	 * @param $v (string) name of the column
+	 * @return (string) name of the value
 	 */
 	public function setIndexResult($v){
 		$this -> builder -> indexResult = $v;
@@ -841,8 +837,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e restituisce i record selezionati come risultato
-	 * @return (array) risultato della query
+	 * Execute the query and return the selected records as result
+	 * @return (array) result of the query
 	 */
 	public function lists(){
 		$r = $this -> assoc($this -> getSelectSQL());
@@ -859,8 +855,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue la query e restituisce il record selezionato come risultato
-	 * @return (array) risultato della query
+	 * Execute the query and return the selected record as results
+	 * @return (array) result of the query
 	 */
 	public function get(){
 		$r = $this -> take(1) -> lists();
@@ -869,8 +865,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Ritorna il codice SQL per la selezione
-	 * @return (string) codice SQL
+	 * Return the SQL code for selection
+	 * @return (string) SQL code
 	 */
 	public function getSelectSQL(){
 
@@ -896,8 +892,8 @@ class queryBuilder{
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	/**
-	 * Esegue una query di ricerca del numero delle colonne
-	 * @return (int) numero delle colonne
+	 * Execute a reserch query of the number of the columns
+	 * @return (int) number of the columns
 	 */
 	public function countColumns(){
 		$c = DB::table('information_schema.COLUMNS');
@@ -908,8 +904,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue una query di ricerca dell'esistenza della colonna
-	 * @param (string) tipo di colonna prestabilita o codice SQL che definisce il tipo di colonna
+	 * Execute a reserch query that search if a column exist
+	 * @param (string) predetermined column type or SQL code that defined the type of the column
 	 * @return (object) $this
 	 */
 	public function hasColumn($v){
@@ -921,8 +917,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Definisce la colonna con la quale bisogna operare
-	 * @param (string) nome della colonna
+	 * Defines the column to use
+	 * @param (string) name of the column
 	 * @return (object) $this
 	 */
 	public function column($v){
@@ -935,8 +931,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Ritorna il codice SQL per la selezione
-	 * @param (string) tipo di colonna prestabilita o codice SQL che definisce il tipo di colonna
+	 * Return the SQL code for the selection
+	 * @param (string) predetermined column type or SQL code that defined the type of the column
 	 * @return (object) $this
 	 */
 	public function type($t){
@@ -959,7 +955,7 @@ class queryBuilder{
 
 	
 	/**
-	 * Rende la colonna una chiave primaria
+	 * Makes the column a primary key
 	 * @return (object) $this
 	 */
 	public function primary(){
@@ -968,7 +964,7 @@ class queryBuilder{
 	}
 
 	/**
-	 * Rende la colonna una chiave unica
+	 * Makes the column a unique key
 	 * @return (object) $this
 	 */
 	public function unique(){
@@ -978,7 +974,7 @@ class queryBuilder{
 	}
 
 	/**
-	 * Rende la colonna un indice
+	 * Makes the column an index
 	 * @return (object) $this
 	 */
 	public function index(){
@@ -987,9 +983,9 @@ class queryBuilder{
 	}
 
 	/**
-	 * Rende la colonna una chiave esterna
-	 * @param $t (string) nome della tabella referenziata
-	 * @param $v (string) nome della colonna referenziata
+	 * Makes the column a foreign key
+	 * @param $t (string) name of the table referenced
+	 * @param $v (string) name of the column referenced
 	 * @return (object) $this
 	 */
 	public function foreign($t,$v){
@@ -1002,23 +998,23 @@ class queryBuilder{
 	}
 
 	/**
-	 * Aggiunge un codice SQL quando ogni volta che avviene un'eliminazione
-	 * @param $c (string) codice SQL
+	 * Add a SQL code everytime there is an elimination
+	 * @param $c (string) SQL code
 	 */
 	public function onDelete($c){
 		$this -> schema -> foreign -> onDelete = " ON DELETE {$c} ";
 	}
 	
 	/**
-	 * Aggiunge un codice SQL quando ogni volta che avviene un aggiornamento
-	 * @param $c (string) codice SQL
+	 * Add a SQL code everytime there is an update
+	 * @param $c (string) SQL code
 	 */
 	public function onUpdate($c){
 		$this -> schema -> foreign -> onDelete = " ON UPDATE {$c} ";
 	}
 
 	/**
-	 * Restituisce il codice SQL che definisce le chiavi esterne
+	 * Return the SQL code that define the foreign keys
 	 */
 	private function updateForeign(){
 		$this -> schema -> add[] = "
@@ -1035,8 +1031,8 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue una query di modifica dello schema del database secondo i parametri impostati precedentemente
-	 * @return (object) risultato della query
+	 * Execute an alteration query of the pattern of the database according to setted parameters
+	 * @return (object) result of the query
 	 */
 	public function alter(){
 		if(!DB::$config['alter_schema']) return;
@@ -1060,25 +1056,24 @@ class queryBuilder{
 	}
 
 	/**
-	 * Esegue una query di reset del contatore auto_increment
-	 * @return (object) risultato della query
+	 * Execute a reset query of the counter auto_increment
+	 * @return (object) result of the query
 	 */
 	public function resetAutoIncrement(){
 		return $this -> query("ALTER TABLE {$this -> builder -> table} AUTO_INCREMENT = 1");
 	}
 	
 	/**
-	 * Aggiunge il nome della tabella alla cache interna. Questo serve ad evitare che la richiesta dell'esistenza
-	 * di una tabella venga ripetuta. * FORSE DA ELIMINARE *
-	 * @param (string) nome della tabella
+	 * Add the name of the table to the internal cache. That is used to avoid the request of existance of a table.
+	 * @param (string) name of the table
 	 */
 	public function addCacheNameTable($r){
 		self::$cacheAlter[] = $r;
 	}
 
 	/**
-	 * Restituisce l'esistenza della tabella nella lista cache
-	 * @return (bool) la tabella è già stata controllata(true) oppure no(false)
+	 * Return the existance of a table in the cache list
+	 * @return (bool) the table is already check(true) or not(false)
 	 */
 	public function getCacheNameTable($r){
 		return in_array($r,self::$cacheAlter);
