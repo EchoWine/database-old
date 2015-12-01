@@ -10,7 +10,7 @@ class DB{
 	/**
 	 * Configuration
 	 */
-	public static $config;
+	private static $config;
 	
 	/**
 	 * Connection
@@ -23,25 +23,14 @@ class DB{
 	protected static $log;
 
 	/**
-	 * Object that contains information for simplified query
-	 */
-	public static $exe;
-
-	/**
-	 * Oggetto per schema
-	 * #Tradurre#
-	 */
-	public static $schema;
-
-	/**
 	 * Contains the last ID of the table and it's used for rollback
 	 */
-	public static $save_id;
+	public static $rollbackLastID;
 
 	/**
 	 * Contains the last name of the table and it's used for rollback
 	 */
-	public static $save_name;
+	public static $rollbackLastTable;
 	
 	/**
 	 * Create a new connection
@@ -65,10 +54,9 @@ class DB{
 			
 		}catch(PDOException $e){
 			self::printError("<b>You can't connect to the host</b><br>".$e->getMessage());
-			die();
 		}
 
-		self::selectDB($cfg['database']);
+		self::select($cfg['database']);
 		self::iniRollback();
 
 	}
@@ -77,8 +65,8 @@ class DB{
 	 * Select the database
 	 * @param $db (string) name of database
 	 */
-	public static function selectDB($db){
-		if(self::$config['alter_schema'])
+	public static function select($db){
+		if(self::getAlterSchema())
 			self::query("CREATE DATABASE IF NOT EXISTS $db");
 		
 		
@@ -96,6 +84,52 @@ class DB{
 	}
 	
 	/**
+	 * Return the name of the database
+	 * @return (string) name database
+	 */
+	public static function getName(){
+		return self::$config['database'];
+	}
+
+	/**
+	 * Return the value of alter_schema
+	 * @return (string) name database
+	 */
+	public static function getAlterSchema(){
+		return self::$config['alter_schema'];
+	}
+	
+	/**
+	 * Return information about the database
+	 * @return (string) information about the database
+	 */
+	public static function getServerInfo(){
+		return 
+			self::$con -> getAttribute(PDO::ATTR_DRIVER_NAME)." ".
+			self::$con -> getAttribute(PDO::ATTR_SERVER_VERSION);
+	}
+
+	/**
+	 * Execute the escape function
+	 * @param $s (string) string to filtrate
+	 * @return (string) string to filtrate
+	 */
+	public static function quote($s){
+		return $s;
+	}
+	
+	/**
+	 * Add characters of escape on the string for a query
+	 * @return $s (string) string to filtrate
+	 * @return (string) string to filtrate
+	 */
+	public static function escape($s){
+		$s = str_replace("_","\_",$s);
+		$s = str_replace("%","\%",$s);
+		return $s;
+	}
+
+	/**
 	 * Execute the query
 	 * @param $query (string) SQL code
 	 * @return (object) PDO object
@@ -107,15 +141,11 @@ class DB{
 
 		}catch(PDOException $e){
 			self::printError("<b>Query</b>: <i>$query</i><br>".$e -> getMessage());
-			error_backtrace();
-			die();
 		}
 
-		if(!$r){
+		if(!$r)
 			self::printError("<b>Query</b>: <i>$query</i><br>".self::$con -> errorInfo()[2]."");
-			error_backtrace();
-			die();
-		}
+		
 		
 		self::$log[] = "<i>".$query."</i>";
 
@@ -125,31 +155,34 @@ class DB{
 	/**
 	 * Execute the query with specific values to filtrate
 	 * @param $query (string) SQL code
-	 * @param $a (array) array of valus
+	 * @param $a (array) array of values
 	 * @return (object) PDO object
 	 */
 	public static function execute($query,$a){
 		
+		// Converto la query in una stringa leggibile
+		$r = array_reverse($a);
+		$k = array_keys($r);
+		$v = array_values($r);
+		foreach($v as &$e)
+			$e = "'{$e}'";
+
+		$q = str_replace($k,$v,$query);
+
 		try{
 
 			$r = self::$con -> prepare($query);
 			$r -> execute($a);
-			
 
 		}catch(PDOException $e){
-			self::printError("<b>Query</b>: <i>$query</i> <br><b>Value</b>: <i>".json_encode($a)."</i><br>".$e -> getMessage());
-			error_backtrace();
-			die();
+			self::printError("<b>Query</b>: <i>$q</i><br>".$e -> getMessage());
 		}
 
-		if(!$r){
-			self::printError("<b>Query</b>: <i>$query</i><br>".self::$con -> errorInfo()[2]."");
-			error_backtrace();
-			die();
-		}
+		if(!$r)
+			self::printError("<b>Query</b>: <i>$q</i><br>".self::$con -> errorInfo()[2]."");
+		
 
-
-		self::$log[] = "<i>".$query." (".json_encode($a).")</i>";
+		self::$log[] = "<i>".$q."</i>";
 		return $r;
 	}
 	
@@ -175,9 +208,8 @@ class DB{
 	 * Print the log
 	 */
 	public static function printLog(){
-		$log = new log("DataBase Log");
-		$log -> setLog(self::$log);
-		$log -> print_();
+		echo "<h1>DataBase Log</h1>";
+		echo implode(self::$log,"<br>");
 	}
 	
 	/**
@@ -185,69 +217,26 @@ class DB{
 	 * @param $error (string) body of the error
 	 */
 	private static function printError($error){
-		echo "<h1>DataBase error</h1>";
-		echo $error;
-	}
-	
-	/**
-	 * Check if a table exists
-	 * @param $name (string) name of the table
-	 * @return (bool) the table exist (true) or not (false)
-	 */
-	public static function if_table_exists($name){
-		return (self::count(self::query("SHOW TABLES LIKE '$name'")) == 1);
+		echo "<h1>DataBase Error</h1>";
+		echo $error."<br>";
+		// throw new Exception($error);
+		die();
 	}
 		
-	/**
-	 * Return the name of the database
-	 * @return (string) name database
-	 */
-	public static function getName(){
-		return self::$config['database'];
-	}
-	
-	/**
-	 * Execute the escape function
-	 * @param $s (string) string to filtrate
-	 * @return (string) string to filtrate
-	 */
-	public static function quote($s){
-		return $s;
-	}
 
 	/**
 	 * Get the value of the last field AUTO_INCREMENT insert
 	 * @return (int) last value of the field AUTO_INCREMENT
 	 */
-	public static function insert_id(){
+	public static function getInsertID(){
 		return self::$con -> lastInsertId();
 	}
 
-	/**
-	 * Return information about the database
-	 * @return (string) information about the database
-	 */
-	public static function get_server_info(){
-		return 
-			self::$con -> getAttribute(PDO::ATTR_DRIVER_NAME)." ".
-			self::$con -> getAttribute(PDO::ATTR_SERVER_VERSION);
-	}
-
-	/**
-	 * Add characters of escape on the string for a query
-	 * @return $s (string) string to filtrate
-	 * @return (string) string to filtrate
-	 */
-	public static function escapeQuery($s){
-		$s = str_replace("_","\_",$s);
-		$s = str_replace("%","\%",$s);
-		return $s;
-	}
 
 	/**
 	 * Create the table that handle the rollback
 	 */
-	public static function iniRollback(){
+	private static function iniRollback(){
 
 		if(!self::$config['alter_schema'])return;
 		
@@ -268,7 +257,7 @@ class DB{
 	 * @param $table (string) name of the table
 	 */
 	public static function save($table){
-		self::$save_name = self::_save($table);
+		self::$rollbackLastTable = self::_save($table);
 	}
 
 	/**
@@ -282,8 +271,12 @@ class DB{
 	 * Bring back the status of a table before the last save
 	 */
 	public static function undo(){
-		$table = self::$save_name;
-		self::_rollback();
+		$table = self::$rollbackLastTable;
+		
+		$q = self::query("SELECT * FROM database_rollback WHERE table_rollback = '{$table}'");
+		$a = $q -> fetch();
+		self::_restore($a['table_from'],$a['table_rollback']);
+
 		self::query("DROP TABLE {$table}");
 		self::query("DELETE FROM database_rollback WHERE table_rollback = '{$table}'");
 	}
@@ -292,15 +285,14 @@ class DB{
 	 * Save a table
 	 * @param $table (string) name of the table
 	 */
-	public static function _save($table){
-		// Salvo i dati...	
+	private static function _save($table){
 		do{
 			$name = md5(microtime());
 			$name = "database_rollback_{$name}";
 		}while(false);
 
 		self::query("INSERT INTO database_rollback (table_rollback,table_from) VALUES ('{$name}','{$table}')");
-		self::$save_id = self::insert_id();
+		self::$rollbackLastID = self::getInsertID();
 		self::query("CREATE TABLE {$name} LIKE {$table}");
 		self::query("INSERT {$name} SELECT * FROM {$table}");
 
@@ -311,7 +303,7 @@ class DB{
 	/**
 	 * Delete the last saved operation
 	 */
-	public static function _delete(){
+	private static function _delete(){
 
 		// Cancellare l'ultima istanza
 		$l = self::$config['rollback'] - 1;
@@ -325,18 +317,19 @@ class DB{
 	}
 
 	/**
-	 * Execute a rollback
+	 * Restore a table
+	 * @param $t1 (string) name of table to restore
+	 * @param $t2 (stirng) name of table to take data
+	 * @return (bool) result of the query
 	 */
-	public static function _rollback(){
-		$table = self::$save_name;
-		$q = self::query("SELECT * FROM database_rollback WHERE table_rollback = '{$table}'");
-		$a = $q -> fetch();
-		self::query("TRUNCATE table {$a['table_from']}");
-		self::query("INSERT {$a['table_from']} SELECT * FROM {$a['table_rollback']}");
+	private static function _restore($t1,$t2){
+
+		return self::query("TRUNCATE table {$t1}") && 
+		self::query("INSERT {$t1} SELECT * FROM {$t2}");
 	}
 
 	/**
-	 * Predispose everything for a rollback
+	 * Execute a rollback
 	 * @param $n (int) number of operations to going back
 	 * @param $id (int) ID of the operation from which start
 	 * @param $overwrite (bool) overwrite the records during the rollback
@@ -356,8 +349,7 @@ class DB{
 			self::_save($a['table_from']);
 			
 			if($overwrite){
-				$q1 = self::query("TRUNCATE table {$a['table_from']}");
-				$q2 = self::query("INSERT {$a['table_from']} SELECT * FROM {$a['table_rollback']}");
+				self::_restore($a['table_from'],$a['table_rollback']);
 			}else{
 				$q1 = true;
 				$q2 = self::query("
@@ -374,30 +366,6 @@ class DB{
 	}
 
 	/**
-	 * Check if a table or a column exists
-	 * @param $w (string) indicate if is a column or a table
-	 * @param $t (string) name of the table
-	 * @param $n (string) optional name of the table
-	 * @return (bool) the reserched object exists (true)
-	 */
-	public static function exists($w,$t,$n = ''){
-		switch($w){
-			case 'column':
-				$q = self::query("
-					SELECT * FROM information_schema.COLUMNS  WHERE 
-					TABLE_SCHEMA = '{self::getName()}' AND 
-					TABLE_NAME = '{$t}' AND
-					COLUMN_NAME = '{$n}'
-				");
-				return self::count($q) == 1;
-			break;
-			case 'table':
-				return self::if_table_exists($t);
-			break;
-		}				
-	}
-
-	/**
 	 * Check if a table exists
 	 * @param $v (string) name of the table
 	 * @return (bool) return if the table exists (true) or not (false)
@@ -407,29 +375,14 @@ class DB{
 	}
 
 	/**
-	 * Check if a column exists
-	 * @param $v1 (string) name of the table
-	 * @param $v2 (string) name of the column
-	 * @return (bool) return if the column exists (true) or not (false)
-	 */
-	public static function hasColumn($v1,$v2){
-		return self::table('information_schema.COLUMNS')
-			-> where('TABLE_SCHEMA',self::getName())
-			-> where('TABLE_NAME',$v1)
-			-> where('COLUMN_NAME',$v2)
-			-> count() == 1;
-	}
-
-	/**
-	 * Create a new object queryBuilder
+	 * Create a new object QueryBuilder
 	 * @param $v (string) name of the table
 	 * @param $as (string) alias of the table
-	 * @return (object) queryBuilder object
+	 * @return (object) QueryBuilder object
 	 */
 	public static function table($v,$as = ''){
-		return new queryBuilder($v,$as);
+		return new QueryBuilder($v,$as);
 	}
 
 }
-
 ?>

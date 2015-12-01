@@ -1,10 +1,15 @@
 <?php
 
 /**
+<<<<<<< HEAD:queryBuilder.class.php
  * @class queryBuilder
  * Class that permits the handle of the query in a defined and semplified way
+=======
+ * @class QueryBuilder
+ * Classe che permette la gestione delle query in maniera ben definita e semplificata
+>>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
  */
-class queryBuilder{
+class QueryBuilder{
 
 	/**
 	 * Infomation about the creation of the query
@@ -34,11 +39,11 @@ class queryBuilder{
 	 */
 	public function __construct($v,$as = ''){
 
-		$this -> builder = new stdObject();
+		$this -> builder = new stdClass();
 		$this -> builder -> prepare = array();
 
 		/* Controllo che si tratti di una select annidata */
-		if(is_closure($v)){
+		if(is_object($v) && ($v instanceof Closure)){
 			$t = $v();
 			$v = "(".$t -> getSelectSQL().")";
 			if(empty($as)) $as = self::getTableAsRandom();
@@ -99,7 +104,7 @@ class queryBuilder{
 	 * @return (array) result of the query
 	 */
 	public function assoc($q,$p = NULL){
-		return DB::fetch($this -> query($q,$p);
+		return DB::fetch($this -> query($q,$p));
 	}
 
 	/**
@@ -289,7 +294,7 @@ class queryBuilder{
 	public function where($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
 		// Se si tratta di un where avanzato
-		if(is_closure($v1)){
+		if(is_object($v1) && ($v1 instanceof Closure)){
 			$n = DB::table($this -> builder -> table);
 			$t = clone $this;
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -319,7 +324,7 @@ class queryBuilder{
 	public function orWhere($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
 		// Se si tratta di un where avanzato
-		if(is_closure($v1)){
+		if(is_object($v1) && ($v1 instanceof Closure)){
 			$n = DB::table($this -> builder -> table);
 			$t = clone $this;
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -457,13 +462,44 @@ class queryBuilder{
 	}
 	
 	/**
+<<<<<<< HEAD:queryBuilder.class.php
 	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
 	 * @param $v (string) name of the column
 	 * @return (object) clone of $this
+=======
+	 * Aggiunge una condizione OR WHERE IS NULL alla query dove i risultati devono avere il valore della
+	 * colonna nullo
+	 * @param $v (string) nome della colonna
+	 * @return (object) clone di $this
+	 */
+	public function orWhereIsNull($v){
+		$t = clone $this;
+		$t -> builder -> orWhere[] = "({$v} IS NULL)";
+		return $t;
+	}
+
+	/**
+	 * Aggiunge una condizione WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
+	 * colonna non nullo
+	 * @param $v (string) nome della colonna
+	 * @return (object) clone di $this
+>>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
 	public function whereIsNotNull($v){
 		$t = clone $this;
 		$t -> builder -> andWhere[] = "({$v} IS NOT NULL)";
+		return $t;
+	}
+	
+	/**
+	 * Aggiunge una condizione OR WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
+	 * colonna non nullo
+	 * @param $v (string) nome della colonna
+	 * @return (object) clone di $this
+	 */
+	public function orWhereIsNotNull($v){
+		$t = clone $this;
+		$t -> builder -> orWhere[] = "({$v} IS NOT NULL)";
 		return $t;
 	}
 
@@ -655,14 +691,11 @@ class queryBuilder{
 		}
 
 		$ignore = $ignore ? ' IGNORE ' : '';
-		$t -> query("
+		return $t -> query("
 			INSERT {$ignore} INTO {$this -> getTableOperation()} 
 			(".implode($kf,",").") 
 			VALUES (".implode($vk,",").") 
 		");
-
-		return DB::insert_id();
-
 	}
 
 	/**
@@ -679,7 +712,7 @@ class queryBuilder{
 		$t = clone $this;
 		$vkk = array();
 
-		if(is_closure($av)){
+		if(is_object($av) && ($av instanceof Closure)){
 			$c = $av();
 			$t -> builder -> prepare = array_merge($t -> builder -> prepare,$c -> builder -> prepare);
 			$vkk = "(".$c -> getSelectSQL().")";
@@ -708,23 +741,30 @@ class queryBuilder{
 	}
 
 	/**
+<<<<<<< HEAD:queryBuilder.class.php
 	 * Execute the query and update the record
 	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
 	 * @param $v2 (string) optional value of the column to update
 	 * @return (int) number of row involved in the update
+=======
+	 * Esegue la query e aggiorna i record
+	 * @param $v1 (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
+	 * @param $v2 (string) optional valore della colonna da aggiornare
+	 * @return (int) numero di righe coinvolte dall'aggiornamento
+>>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
-	public function update($v,$v2 = NULL){
+	public function update($v1,$v2 = NULL){
 
 		if(empty($v))return 0;
 
 		$t = clone $this;
 
-		if(!is_array($v) && isset($v2)){
-			$kf = array("{$this -> builder -> table}.{$v} = ".$t -> setPrepare($v2));
+		if(!is_array($v1) && isset($v2)){
+			$kf = array("{$this -> builder -> table}.{$v1} = ".$t -> setPrepare($v2));
 		}else{
 			$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
-			foreach($v as $k => $v){
-				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v);
+			foreach($v1 as $k => $v){
+				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v1);
 			}
 		}
 
@@ -743,26 +783,39 @@ class queryBuilder{
 	}
 
 	/**
+<<<<<<< HEAD:queryBuilder.class.php
 	 * Execute the query and update the records
 	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
 	 * @param $v2 (string) optional value of the column to update
 	 * @return (int) number of row involved in the update
+=======
+	 * Esegue la query e aggiorna i record
+	 * @param $v1 (array) array delle colonne da aggiornare in base a determinate condizioni
+	 * @param $v2 (array) optional valore della colonna da aggiornare
+	 * @return (int) numero di righe coinvolte dall'aggiornamento
+>>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
-	public function updateMultiple($v,$v2){
-		if(empty($v) || empty($v2))return false;
+	public function updateMultiple($v1,$v2){
+		if(empty($v1) || empty($v2))return false;
+
 		$t = clone $this;
 		$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
-		foreach($v as $k => $v){
-			$s = "{$this -> builder -> table}.$k = CASE {$v}";
-			$where = array();
-			foreach($v2[$k] as $n1 => $k1){
-				$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
-				$where[] = $t -> setPrepare($n1);
-			}
-			$s .= " ELSE {$k} END";
-			$s .= " WHERE {$v} IN(".implode(" , ",$where).")";
+		
+		foreach($v1 as $k => $v){
 
-			$kf[] = $s;
+			if(is_array($v2[$k])){
+				$s = "{$this -> builder -> table}.{$v[1]} = CASE {$v[0]}";
+
+				foreach($v2[$k] as $n1 => $k1){
+					$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
+					$where[] = $n1;
+				}
+				$s .= " ELSE {$v[1]} END";
+
+				$kf[] = $s;
+			}else{
+				$kf[] = "{$this -> builder -> table}.{$v} = ".$t -> setPrepare($v2[$k]);
+			}
 		}
 
 
@@ -771,7 +824,7 @@ class queryBuilder{
 			".implode($t -> builder -> join," ")."
 			SET
 			".implode($kf,",")." 
-			".$this -> getWhereSQL()."
+			".$t -> getWhereSQL()."
 		");
 
 		$r = DB::count($q);
@@ -806,13 +859,20 @@ class queryBuilder{
 	}
 	
 	/**
+<<<<<<< HEAD:queryBuilder.class.php
 	 * Regroup the same results from a specific column 
 	 * @param $v (string) name of the column involved in the regroup
 	 * @return (object) clone of $this
+=======
+	 * Raggruppa i risultati con valori di una colonna specifica uguali
+	 * @param $v (mixed) nome o array di nomi coinvolti nel raggruppamento
+	 * @return (object) clone di $this
+>>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
 	public function groupBy($v){
 		$t = clone $this;
-		$t -> builder -> groupBy[] = $v;
+		if(!is_array($v))$v = array($v);
+		$t -> builder -> groupBy = array_merge($t -> builder -> groupBy,$v);
 		return $t;
 	}
 
@@ -922,10 +982,10 @@ class queryBuilder{
 	 * @return (object) $this
 	 */
 	public function column($v){
-		$this -> schema = new stdObject();
+		$this -> schema = new stdClass();
 		$this -> schema -> column = strtolower($v);
 		$this -> schema -> add = array();
-		$this -> schema -> foreign = new stdObject();
+		$this -> schema -> foreign = new stdClass();
 
 		return $this;
 	}
@@ -947,6 +1007,7 @@ class queryBuilder{
 			case 'text': $t = 'TEXT'; break;
 			case 'float': $t = "DOUBLE"; break;
 			case 'cod': $t = "VARCHAR(11)"; break;
+			case 'string': $t = "VARCHAR(80)"; break;
 		}
 
 		$this -> schema -> add[] = "{$this -> schema -> column} {$t}";
@@ -1035,7 +1096,7 @@ class queryBuilder{
 	 * @return (object) result of the query
 	 */
 	public function alter(){
-		if(!DB::$config['alter_schema']) return;
+		if(!DB::getAlterSchema()) return;
 
 		
 		if(!$this -> getCacheNameTable($this -> builder -> table)){
@@ -1048,7 +1109,7 @@ class queryBuilder{
 
 		if(!$this -> hasColumn($this -> schema -> column)){
 			return $this -> query("
-				ALTER TABLE {$this -> builder -> table} ADD ".implode($this -> schema -> add,", ADD")."
+				ALTER TABLE {$this -> builder -> table} ADD ".implode($this -> schema -> add,", ADD ")."
 			");
 		}
 
