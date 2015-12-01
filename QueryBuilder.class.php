@@ -1,13 +1,8 @@
 <?php
 
 /**
-<<<<<<< HEAD:queryBuilder.class.php
- * @class queryBuilder
- * Class that permits the handle of the query in a defined and semplified way
-=======
  * @class QueryBuilder
- * Classe che permette la gestione delle query in maniera ben definita e semplificata
->>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
+ * Class that permits the handle of the query in a defined and semplified way
  */
 class QueryBuilder{
 
@@ -119,7 +114,6 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Esegue la query e ritorna se il record esiste o meno
 	 * Execute the query and return if the record exists or not
 	 * @param $v (string) name of the column
 	 * @param $a (mixed) value or array of value that identified the column
@@ -216,7 +210,6 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Ordina i risultati per ordine decrescente
 	 * Arrange the results in descending order
 	 * @param $v (string) name of the column
 	 * @return (object) $this
@@ -461,30 +454,22 @@ class QueryBuilder{
 		return $t;
 	}
 	
-	/**
-<<<<<<< HEAD:queryBuilder.class.php
-	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
+    /**
+	 * Add a condition OR WHERE IS NULL to the query where the results must have a null value in the column
 	 * @param $v (string) name of the column
 	 * @return (object) clone of $this
-=======
-	 * Aggiunge una condizione OR WHERE IS NULL alla query dove i risultati devono avere il valore della
-	 * colonna nullo
-	 * @param $v (string) nome della colonna
-	 * @return (object) clone di $this
 	 */
 	public function orWhereIsNull($v){
 		$t = clone $this;
 		$t -> builder -> orWhere[] = "({$v} IS NULL)";
 		return $t;
 	}
-
+	
 	/**
-	 * Aggiunge una condizione WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
-	 * colonna non nullo
-	 * @param $v (string) nome della colonna
-	 * @return (object) clone di $this
->>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
-	 */
+	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
+	 * @param $v (string) name of the column
+	 * @return (object) clone of $this
+     */
 	public function whereIsNotNull($v){
 		$t = clone $this;
 		$t -> builder -> andWhere[] = "({$v} IS NOT NULL)";
@@ -492,10 +477,9 @@ class QueryBuilder{
 	}
 	
 	/**
-	 * Aggiunge una condizione OR WHERE IS NOT NULL alla query dove i risultati devono avere il valore della
-	 * colonna non nullo
-	 * @param $v (string) nome della colonna
-	 * @return (object) clone di $this
+	 * Add a condition OR WHERE IS NOT NULL to the query where the results must not have a null value in the column
+	 * @param $v (string) name of the column
+	 * @return (object) clone of $this
 	 */
 	public function orWhereIsNotNull($v){
 		$t = clone $this;
@@ -741,18 +725,12 @@ class QueryBuilder{
 	}
 
 	/**
-<<<<<<< HEAD:queryBuilder.class.php
 	 * Execute the query and update the record
-	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
+	 * @param $v1 (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
 	 * @param $v2 (string) optional value of the column to update
 	 * @return (int) number of row involved in the update
-=======
-	 * Esegue la query e aggiorna i record
-	 * @param $v1 (mixed) se $v2 è definito indica il nome della colonna da aggiornare, altrimenti l'array (nome colonna => valore colonne)
-	 * @param $v2 (string) optional valore della colonna da aggiornare
-	 * @return (int) numero di righe coinvolte dall'aggiornamento
->>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
+
 	public function update($v1,$v2 = NULL){
 
 		if(empty($v))return 0;
@@ -783,17 +761,10 @@ class QueryBuilder{
 	}
 
 	/**
-<<<<<<< HEAD:queryBuilder.class.php
 	 * Execute the query and update the records
-	 * @param $v (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
-	 * @param $v2 (string) optional value of the column to update
+	 * @param $v1 (array) array of columns to update in base a specific condition
+	 * @param $v2 (array) value of the column to update
 	 * @return (int) number of row involved in the update
-=======
-	 * Esegue la query e aggiorna i record
-	 * @param $v1 (array) array delle colonne da aggiornare in base a determinate condizioni
-	 * @param $v2 (array) optional valore della colonna da aggiornare
-	 * @return (int) numero di righe coinvolte dall'aggiornamento
->>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
 	public function updateMultiple($v1,$v2){
 		if(empty($v1) || empty($v2))return false;
@@ -857,17 +828,11 @@ class QueryBuilder{
 			TRUNCATE {$this -> builder -> table} 
 		");
 	}
-	
+
 	/**
-<<<<<<< HEAD:queryBuilder.class.php
 	 * Regroup the same results from a specific column 
-	 * @param $v (string) name of the column involved in the regroup
+	 * @param $v (mixed) name or array of names of the column involved in the regroup
 	 * @return (object) clone of $this
-=======
-	 * Raggruppa i risultati con valori di una colonna specifica uguali
-	 * @param $v (mixed) nome o array di nomi coinvolti nel raggruppamento
-	 * @return (object) clone di $this
->>>>>>> 15f269daeaac14a1b28e933b11c49b62cf99eeeb:QueryBuilder.class.php
 	 */
 	public function groupBy($v){
 		$t = clone $this;
