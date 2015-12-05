@@ -364,7 +364,7 @@ class QueryBuilder{
 				JOIN information_schema.key_column_usage k
 				USING(constraint_name,table_schema,table_name)
 				WHERE t.constraint_type='PRIMARY KEY'
-					AND t.constraint_schema='".DB::$config['database']."'
+					AND t.constraint_schema='".DB::getName()."'
 					AND t.table_name='{$this -> builder -> table}')
 
 			";
