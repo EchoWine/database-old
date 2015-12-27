@@ -810,7 +810,6 @@ class QueryBuilder{
 	 * @return (int) number of rows involved in the elimination
 	 */
 	public function delete($v = ''){
-		if(empty($v)) $v = $this -> getTableOperation();
 		return $this -> query("
 			DELETE {$v} FROM {$this -> getTableOperation()} 
 			".implode($this -> builder -> join," ")."
