@@ -733,7 +733,7 @@ class QueryBuilder{
 
 	public function update($v1,$v2 = NULL){
 
-		if(empty($v))return 0;
+		if(empty($v1))return 0;
 
 		$t = clone $this;
 
@@ -742,7 +742,7 @@ class QueryBuilder{
 		}else{
 			$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
 			foreach($v1 as $k => $v){
-				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v1);
+				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v);
 			}
 		}
 
@@ -753,6 +753,7 @@ class QueryBuilder{
 			".implode($kf,",")." 
 			".$this -> getWhereSQL()."
 		");
+
 
 		$r = DB::count($q);
 
