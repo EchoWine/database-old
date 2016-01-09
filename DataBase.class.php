@@ -33,8 +33,10 @@ class DB{
 	
 	/**
 	 * Create a new connection
+	 *
+	 * @param array $cfg config
 	 */
-	public static function connect($cfg){
+	public static function connect(array $cfg){
 
 		self::$config = $cfg;
 		
@@ -65,7 +67,7 @@ class DB{
 	 *
 	 * @param string $db name of database
 	 */
-	public static function select($db){
+	public static function select(string $db){
 		if(self::getAlterSchema())
 			self::query("CREATE DATABASE IF NOT EXISTS $db");
 		
@@ -113,22 +115,12 @@ class DB{
 	}
 
 	/**
-	 * Execute the escape function
-	 *
-	 * @param string $s string to filtrate
-	 * @return string string to filtrate
-	 */
-	public static function quote($s){
-		return $s;
-	}
-	
-	/**
 	 * Add characters of escape on the string for a query
 	 *
 	 * @return $s (string) string to filtrate
 	 * @return string string to filtrate
 	 */
-	public static function escape($s){
+	public static function escape(string $s){
 		$s = str_replace("_","\_",$s);
 		$s = str_replace("%","\%",$s);
 		return $s;
@@ -140,7 +132,7 @@ class DB{
 	 * @param string $query SQL code
 	 * @return object PDO object
 	 */
-	public static function query($query){
+	public static function query(string $query){
 
 		try{
 			$r = self::$con -> query($query);
@@ -165,7 +157,7 @@ class DB{
 	 * @param array $a array of values
 	 * @return object PDO object
 	 */
-	public static function execute($query,$a){
+	public static function execute(string $query,array $a){
 		
 		// Converto la query in una stringa leggibile
 		$r = array_reverse($a);
@@ -196,20 +188,20 @@ class DB{
 	/**
 	 * Execute the query and return a result as array
 	 *
-	 * @param object $q PDO object
+	 * @param PDOStatement $q PDO object
 	 * @return array result
 	 */
-	public static function fetch($q){
+	public static function fetch(PDOStatement $q){
 		return $q -> fetchAll(PDO::FETCH_ASSOC);
 	}
 
 	/**
 	 * Count the results of a query
 	 *
-	 * @param object $q PDO object
+	 * @param PDOStatement $q PDO object
 	 * @return int number of result
 	 */
-	public static function count($q){
+	public static function count(PDOStatement $q){
 		return $q -> rowCount();
 	}
 	
@@ -226,14 +218,10 @@ class DB{
 	 *
 	 * @param string $error body of the error
 	 */
-	private static function printError($error){
-		echo "<h1>DataBase Error</h1>";
-		echo $error."<br>";
-		// throw new Exception($error);
-		die();
+	private static function printError(string $error){
+		die("<h1>DataBase Error</h1>$error<br>");
 	}
 		
-
 	/**
 	 * Get the value of the last field AUTO_INCREMENT insert
 	 *
@@ -242,6 +230,49 @@ class DB{
 	public static function getInsertID(){
 		return self::$con -> lastInsertId();
 	}
+	
+	/**
+	 * Begin transaction
+	 */
+	public static function beginTransaction(){
+		return self::$con -> beginTransaction();
+	}
+
+	/**
+	 * Commit
+	 */
+	public static function commit(){
+		return self::$con -> commit();
+	}
+
+	/**
+	 * Rollback
+	 */
+	public static function rollback(){
+		return self::$con -> rollback();
+	}
+
+	/**
+	 * Transaction
+	 *
+	 * @param Closure $f
+	 */
+	public static function transaction(Closure $f){
+
+		self::beginTransaction();
+
+		try{
+			$f();
+			self::commit();
+			return true;
+
+		}catch(Exception $e){
+			self::rollback();
+			return false;
+
+		}
+	}
+
 
 	/**
 	 * Check if a table exists
@@ -249,7 +280,7 @@ class DB{
 	 * @param string $v name of the table
 	 * @return bool return if the table exists (true) or not (false)
 	 */
-	public static function hasTable($v){
+	public static function hasTable(string $v){
 		return self::count(self::query("SHOW TABLES LIKE '{$v}'")) == 1;
 	}
 
@@ -260,7 +291,7 @@ class DB{
 	 * @param string $as alias of the table
 	 * @return object QueryBuilder object
 	 */
-	public static function table($v,$as = ''){
+	public static function table(string $v,$as = ''){
 		return new QueryBuilder($v,$as);
 	}
 
@@ -286,16 +317,16 @@ class DB{
 			);
 		");
 
-		self::save();
+		self::confirm();
 	}
 
 	/**
-	 * Prepare the table 
+	 * Save the table 
 	 * Save the current status of the table
 	 *
 	 * @param string $table name of the table
 	 */
-	public static function prepare($table){
+	public static function save(string $table){
 
 		do{
 			$name = md5(microtime());
@@ -313,7 +344,7 @@ class DB{
 	 * Save the operation
 	 * Delete the last operation and "confirm" the actual already entered
 	 */
-	public static function save(){
+	public static function confirm(){
 		
 		
 		$l = self::$config['restore'] - 1;
@@ -326,14 +357,14 @@ class DB{
 	}
 
 	/**
-	 * Bring back the records of a table before the prepare
+	 * Bring back the records of a table before the save
 	 */
 	public static function undo(){
 		$table = self::$restoreLastTable;
 		
 		$q = self::query("SELECT * FROM db_restore WHERE table_restore = '{$table}'");
 		$a = $q -> fetch();
-		self::_restore($a['table_from'],$a['table_restore']);
+		self::copy($a['table_from'],$a['table_restore']);
 
 		self::query("DROP TABLE {$table}");
 		self::query("DELETE FROM db_restore WHERE table_restore = '{$table}'");
@@ -346,7 +377,8 @@ class DB{
 	 * @param int $id ID of the operation from which start
 	 * @return bool result of the operation
 	 */
-	public static function restore($n = 1,$id = NULL){
+
+	public static function restore(int $n = 1,int $id = NULL){
 
 		if($n < 1) $n = 1;
 		$n--;
@@ -357,11 +389,11 @@ class DB{
 		if(self::count($q) == 1){
 			$a = $q -> fetch();
 			
-			self::prepare($a['table_from']);
+			self::save($a['table_from']);
 			
-			$q = self::_restore($a['table_from'],$a['table_restore']);
+			$q = self::copy($a['table_from'],$a['table_restore']);
 
-			self::save();
+			self::confirm();
 			return $q;
 		}
 		return false;
@@ -369,13 +401,13 @@ class DB{
 
 
 	/**
-	 * Restore a table
+	 * Copy the content of a table in another
 	 *
 	 * @param string $t1 name of table to restore
 	 * @param stirng $t2 name of table to take data
 	 * @return bool result of the query
 	 */
-	private static function _restore($t1,$t2){
+	private static function copy(string $t1,string $t2){
 
 		return self::query("TRUNCATE table {$t1}") && 
 		self::query("INSERT {$t1} SELECT * FROM {$t2}");

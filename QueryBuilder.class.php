@@ -732,7 +732,6 @@ class QueryBuilder{
 		$vk = array();
 		foreach($a as $k => $v){
 			$kf[] = $k;
-			$v = DB::quote($v);
 			$vk[] = $t -> setPrepare($v);
 		}
 
@@ -768,7 +767,6 @@ class QueryBuilder{
 			foreach($av as $k){
 				$vk = array();
 				foreach($k as $v){
-					$v = DB::quote($v);
 					$vk[] = $t -> setPrepare($v);
 				}
 				$vkk[] = "(".implode($vk,",").")";
