@@ -6,6 +6,16 @@
 class QueryBuilder{
 
 	/**
+	 * Counter of all istance of this class
+	 */
+	public static $counter = 0;
+
+	/**
+	 * Count of actual istance
+	 */
+	public $count;
+
+	/**
 	 * Infomation about the creation of the query
 	 */
 	public $builder;
@@ -41,26 +51,30 @@ class QueryBuilder{
 		/* Controllo che si tratti di una select annidata */
 		if(is_object($v) && ($v instanceof Closure)){
 			$t = $v();
-			$v = "(".$t -> getSelectSQL().")";
+			$v = "(".$t -> getUnionSQL().")";
 			if(empty($as)) $as = self::getTableAsRandom();
 			$this -> builder -> prepare = $t -> builder -> prepare;
 		}
 
 		$this -> builder -> table = $v;
 		$this -> builder -> table_as = $as;
-		$this -> builder -> agg = array();
-		$this -> builder -> select = array();
-		$this -> builder -> update = array();
-		$this -> builder -> orderby = array();
+		$this -> builder -> agg = [];
+		$this -> builder -> select = [];
+		$this -> builder -> update = [];
+		$this -> builder -> orderby = array();[];
 		$this -> builder -> skip = NULL;
 		$this -> builder -> take = NULL;
-		$this -> builder -> groupBy = array();;
-		$this -> builder -> andWhere = array();
-		$this -> builder -> orWhere = array();
-		$this -> builder -> join = array();
+		$this -> builder -> groupBy = [];
+		$this -> builder -> andWhere = [];
+		$this -> builder -> orWhere = [];
+		$this -> builder -> join = [];
+		$this -> builder -> union = [];
 		$this -> builder -> is_table = false;
 		$this -> builder -> indexResult = "";
-		$this -> builder -> tmp_prepare = array();
+		$this -> builder -> tmp_prepare = [];
+
+		$this -> count = self::$counter;
+		self::$counter++;
 
 		return $this;
 	}
@@ -113,7 +127,7 @@ class QueryBuilder{
 	 * @return string name of the value
 	 */
 	public function setPrepare($v){
-		$l = ":p".count($this -> builder -> prepare);
+		$l = ":p".$this -> count."_".count($this -> builder -> prepare);
 		$this -> builder -> prepare[$l] = $v;
 		return $l;
 	}
@@ -470,12 +484,12 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Add a condition WHERE IS NULL to the query where the results must have a null value in the column
+	 * Add a condition WHERE NULL to the query where the results must have a null value in the column
 	 *
 	 * @param string $v name of the column
 	 * @return object clone of $this
 	 */
-	public function whereIsNull($v){
+	public function whereNull($v){
 		$t = clone $this;
 		$t -> builder -> andWhere[] = "({$v} IS NULL)";
 		return $t;
@@ -486,7 +500,7 @@ class QueryBuilder{
 	 * @param string $v name of the column
 	 * @return object clone of $this
 	 */
-	public function orWhereIsNull($v){
+	public function orWhereNull($v){
 		$t = clone $this;
 		$t -> builder -> orWhere[] = "({$v} IS NULL)";
 		return $t;
@@ -498,7 +512,7 @@ class QueryBuilder{
 	 * @param string $v name of the column
 	 * @return object clone of $this
      */
-	public function whereIsNotNull($v){
+	public function whereNotNull($v){
 		$t = clone $this;
 		$t -> builder -> andWhere[] = "({$v} IS NOT NULL)";
 		return $t;
@@ -510,7 +524,7 @@ class QueryBuilder{
 	 * @param string $v name of the column
 	 * @return object clone of $this
 	 */
-	public function orWhereIsNotNull($v){
+	public function orWhereNotNull($v){
 		$t = clone $this;
 		$t -> builder -> orWhere[] = "({$v} IS NOT NULL)";
 		return $t;
@@ -665,6 +679,19 @@ class QueryBuilder{
 	}
 
 	/**
+	 * Add a union statment
+	 *
+	 * @param QueryBuilder $q
+	 * @return object clone of $this
+	 */
+	public function union(QueryBuilder $q){
+		$t = clone $this;
+		$t -> builder -> union[] = $q;
+		$t -> builder -> prepare = array_merge($t -> builder -> prepare,$q -> builder -> prepare);
+		return $t;
+	}
+
+	/**
 	 * Execute the query and insert a record ignoring duplicates
 	 *
 	 * @param string $v array of elements to insert (name column => value column)
@@ -735,7 +762,7 @@ class QueryBuilder{
 		if(is_object($av) && ($av instanceof Closure)){
 			$c = $av();
 			$t -> builder -> prepare = array_merge($t -> builder -> prepare,$c -> builder -> prepare);
-			$vkk = "(".$c -> getSelectSQL().")";
+			$vkk = "(".$c -> getUnionSQL().")";
 
 		}else{
 			foreach($av as $k){
@@ -910,7 +937,8 @@ class QueryBuilder{
 	 * @return array result of the query
 	 */
 	public function lists(){
-		$r = $this -> assoc($this -> getSelectSQL());
+		$r = $this -> assoc($this -> getUnionSQL());
+
 		if(!empty($this -> builder -> indexResult)){
 			$s = array();
 			foreach($r as $n => $k){
@@ -935,6 +963,24 @@ class QueryBuilder{
 	}
 
 	/**
+	 * Return the SQL code for union
+	 *
+	 * @return string SQL code
+	 */
+	public function getUnionSQL(){
+
+		$u = $this -> builder -> union;
+		$u[] = $this;
+
+
+		$r = [];
+		foreach($u as $k){
+			$r[] = $k -> getSelectSQL();
+		}
+		return implode($r," UNION ");
+	}
+
+	/**
 	 * Return the SQL code for selection
 	 *
 	 * @return string SQL code
@@ -954,6 +1000,7 @@ class QueryBuilder{
 			".$this -> getOrderBySQL()."
 			".$this -> getLimitSQL()."
 		";
+
 		$t = empty($t) ? $c : "{$t}($c) as tmp".++$i;
 		
 
