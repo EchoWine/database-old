@@ -567,11 +567,10 @@ class QueryBuilder{
 	 * @param $v1 (string) name of the column of the primary table
 	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
 	 * @param $v3 (string) optional name of the column of the second table
-	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
-	public function leftJoin($t,$v1,$v2,$v3 = NULL,$v4 = true){
-		return $this -> _join('LEFT JOIN',$t,$v1,$v2,$v3,$v4);
+	public function leftJoin($t,$v1,$v2,$v3 = NULL){
+		return $this -> _join('LEFT JOIN',$t,$v1,$v2,$v3);
 	}
 
 	/**
@@ -580,11 +579,10 @@ class QueryBuilder{
 	 * @param $v1 (string) name of the column of the primary table
 	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
 	 * @param $v3 (string) optional name of the column of the second table
-	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
-	public function rightJoin($t,$v1,$v2,$v3 = NULL,$v4 = true){
-		return $this -> _join('RIGHT JOIN',$t,$v1,$v2,$v3,$v4);
+	public function rightJoin($t,$v1,$v2,$v3 = NULL){
+		return $this -> _join('RIGHT JOIN',$t,$v1,$v2,$v3);
 	}
 
 	/**
@@ -593,11 +591,10 @@ class QueryBuilder{
 	 * @param $v1 (string) name of the column of the primary table
 	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
 	 * @param $v3 (string) optional name of the column of the second table
-	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) $this
 	 */
-	public function join($t,$v1,$v2,$v3 = NULL,$v4 = true){
-		return $this -> _join('JOIN',$t,$v1,$v2,$v3,$v4);
+	public function join($t,$v1,$v2,$v3 = NULL){
+		return $this -> _join('JOIN',$t,$v1,$v2,$v3);
 	}
 
 	/**
@@ -607,10 +604,9 @@ class QueryBuilder{
 	 * @param $v1 (string) name of the column of the primary table
 	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
 	 * @param $v3 (string) optional name of the column of the second table
-	 * @param $v4 (bool) optional indicates if automatically assign the table to the column (true) or not (false)
 	 * @return (object) clone of $this
 	 */
-	public function _join($ACT,$table,$v1,$v2,$v3 = NULL,$v4 = true){
+	public function _join($ACT,$table,$v1,$v2,$v3 = NULL){
 
 		$t = clone $this;
 
@@ -624,9 +620,7 @@ class QueryBuilder{
 			$c2 = $v2;
 		}
 
-		$t -> builder -> join[] = ($v4)
-			? "{$ACT} {$table} ON {$this -> builder -> table}.{$c1} {$op} {$table}.{$c2}"
-			: "{$ACT} {$table} ON {$c1} {$op} {$c2}";
+		$t -> builder -> join[] = "{$ACT} {$table} ON {$c1} {$op} {$c2}";
 
 		return $t;
 
@@ -738,11 +732,11 @@ class QueryBuilder{
 		$t = clone $this;
 
 		if(!is_array($v1) && isset($v2)){
-			$kf = array("{$this -> builder -> table}.{$v1} = ".$t -> setPrepare($v2));
+			$kf = array("$v1 = ".$t -> setPrepare($v2));
 		}else{
 			$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
 			foreach($v1 as $k => $v){
-				$kf[] = "{$this -> builder -> table}.$k = ".$t -> setPrepare($v);
+				$kf[] = "$k = ".$t -> setPrepare($v);
 			}
 		}
 
@@ -776,7 +770,7 @@ class QueryBuilder{
 		foreach($v1 as $k => $v){
 
 			if(is_array($v2[$k])){
-				$s = "{$this -> builder -> table}.{$v[1]} = CASE {$v[0]}";
+				$s = "{$v[1]} = CASE {$v[0]}";
 
 				foreach($v2[$k] as $n1 => $k1){
 					$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
@@ -786,7 +780,7 @@ class QueryBuilder{
 
 				$kf[] = $s;
 			}else{
-				$kf[] = "{$this -> builder -> table}.{$v} = ".$t -> setPrepare($v2[$k]);
+				$kf[] = "{$v} = ".$t -> setPrepare($v2[$k]);
 			}
 		}
 
