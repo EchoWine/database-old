@@ -978,7 +978,7 @@ class QueryBuilder{
 	/**
 	 * Execute a reserch query that search if a column exist
 	 *
-	 * @param (string) predetermined column type or SQL code that defined the type of the column
+	 * @param string $v predetermined column type or SQL code that defined the type of the column
 	 * @return object $this
 	 */
 	public function hasColumn($v){
@@ -992,7 +992,7 @@ class QueryBuilder{
 	/**
 	 * Defines the column to use
 	 *
-	 * @param (string) name of the column
+	 * @param string $v name of the column
 	 * @return object $this
 	 */
 	public function column($v){
@@ -1007,7 +1007,7 @@ class QueryBuilder{
 	/**
 	 * Return the SQL code for the selection
 	 *
-	 * @param (string) predetermined column type or SQL code that defined the type of the column
+	 * @param string $t predetermined column type or SQL code that defined the type of the column
 	 * @return object $this
 	 */
 	public function type($t){
@@ -1150,7 +1150,7 @@ class QueryBuilder{
 	/**
 	 * Add the name of the table to the internal cache. That is used to avoid the request of existance of a table.
 	 *
-	 * @param (string) name of the table
+	 * @param string $r name of the table
 	 */
 	public function addCacheNameTable($r){
 		self::$cacheAlter[] = $r;
