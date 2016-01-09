@@ -1,8 +1,7 @@
 <?php
 
 /**
- * @class QueryBuilder
- * Class that permits the handle of the query in a defined and semplified way
+ * Query Builder
  */
 class QueryBuilder{
 
@@ -28,9 +27,11 @@ class QueryBuilder{
 
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
-	 * @param $v (string) name of the table
-	 * @param $as (string) optional alias of the table
-	 * @return (string) name alias of the table
+	 * 
+	 *
+	 * @param string $v name of the table
+	 * @param string $as optional alias of the table
+	 * @return string name alias of the table
 	 */
 	public function __construct($v,$as = ''){
 
@@ -66,7 +67,8 @@ class QueryBuilder{
 	
 	/**
 	 * Return a random name (unused) to use as alias for the query
-	 * @return (string) alias name of the table
+	 *
+	 * @return string alias name of the table
 	 */
 	public static function getTableAsRandom(){
 		$c = "t".count(self::$tableAs);
@@ -83,7 +85,8 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query
-	 * @return (object) result of the query
+	 *
+	 * @return object result of the query
 	 */
 	public function query($q,$p = NULL){
 		if(!isset($p))$p = $this -> builder -> prepare;
@@ -94,9 +97,10 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and convert the result in an array
-	 * @param $q (string) query to execute
-	 * @param $p (array) array of values to preparare
-	 * @return (array) result of the query
+	 *
+	 * @param string $q query to execute
+	 * @param array $p array of values to preparare
+	 * @return array result of the query
 	 */
 	public function assoc($q,$p = NULL){
 		return DB::fetch($this -> query($q,$p));
@@ -104,8 +108,9 @@ class QueryBuilder{
 
 	/**
 	 * Prepare a value to be insert in the SQL code. Used in the PDO calls
-	 * @param $v (string) value
-	 * @return (string) name of the value
+	 *
+	 * @param string $v value
+	 * @return string name of the value
 	 */
 	public function setPrepare($v){
 		$l = ":p".count($this -> builder -> prepare);
@@ -115,9 +120,10 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return if the record exists or not
-	 * @param $v (string) name of the column
-	 * @param $a (mixed) value or array of value that identified the column
-	 * @return (mixed) bool if is only a value or array of bool if is an array of records
+	 *
+	 * @param string $v name of the column
+	 * @param mixed $a value or array of value that identified the column
+	 * @return mixed bool if is only a value or array of bool if is an array of records
 	 */
 	public function exists($v,$a){
 		$r = is_array($a) ? $this -> whereIn($v,$a) : $this -> where($v,$a);
@@ -140,8 +146,9 @@ class QueryBuilder{
 	/**
 	 * Execute the query and return the number of record in the table, if the column is specified
 	 * return the number of record with the column's value not null
-	 * @param $v (string) name of the column
-	 * @return (int) number of records
+	 *
+	 * @param string $v name of the column
+	 * @return int number of records
 	 */
 	public function count($v = '*'){
 		return $this -> selectFunction($v,'COUNT');
@@ -150,8 +157,9 @@ class QueryBuilder{
 	
 	/**
 	 * Execute the query and return the lower value in a specific column
-	 * @param $v (string) name of the column
-	 * @return (mixed) lower value of all values in a column
+	 *
+	 * @param string $v name of the column
+	 * @return mixed lower value of all values in a column
 	 */
 	public function min($v){
 		return $this -> selectFunction($v,'MIN');
@@ -159,8 +167,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return the max values of a specific column
-	 * @param $v (string) name of the column
-	 * @return (mixed) max value of all values in a column
+	 *
+	 * @param string $v name of the column
+	 * @return mixed max value of all values in a column
 	 */
 	public function max($v){
 		return $this -> selectFunction($v,'MAX');
@@ -168,8 +177,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return the average value in a specific column
-	 * @param $v (string) name of the column
-	 * @return (float) average value of all values in a column
+	 *
+	 * @param string $v name of the column
+	 * @return float average value of all values in a column
 	 */
 	public function avg($v){
 		return $this -> selectFunction($v,'AVG');
@@ -177,8 +187,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return the summation of the values in a specific column
-	 * @param $v (string) name of the column
-	 * @return (float) sum of the values in a column
+	 *
+	 * @param string $v name of the column
+	 * @return float sum of the values in a column
 	 */
 	public function sum($v){
 		return $this -> selectFunction($v,'SUM');
@@ -186,9 +197,10 @@ class QueryBuilder{
 	
 	/**
 	 * Execute the query and return the result of a method applied in some values of a specific column
-	 * @param $v (string) name of the function
-	 * @param $f (string) function
-	 * @return (object) $this
+	 *
+	 * @param string $v name of the function
+	 * @param string $f function
+	 * @return object $this
 	 */
 	public function selectFunction($v,$f){
 		$c = clone $this;
@@ -201,8 +213,9 @@ class QueryBuilder{
 
 	/**
 	 * Arrange the results in ascending order
-	 * @param $v (string) name of the column
-	 * @return (object) $this
+	 *
+	 * @param string $v name of the column
+	 * @return object $this
 	 */
 	public function orderByAsc($c){
 		$this -> builder -> orderby[] = "$c ASC";
@@ -211,8 +224,9 @@ class QueryBuilder{
 
 	/**
 	 * Arrange the results in descending order
-	 * @param $v (string) name of the column
-	 * @return (object) $this
+	 *
+	 * @param string $v name of the column
+	 * @return object $this
 	 */
 	public function orderByDesc($c){
 		$this -> builder -> orderby[] = "$c DESC";
@@ -221,7 +235,8 @@ class QueryBuilder{
 
 	/**
 	 * Return the SQL code for sorting
-	 * @return (string) SQL code
+	 *
+	 * @return string SQL code
 	 */
 	public function getOrderBySQL(){
 		$o = $this -> builder -> orderby;
@@ -230,8 +245,9 @@ class QueryBuilder{
 
 	/**
 	 * Add a column to select on the query
-	 * @param $a (mixed) contains the list of all the column to add or a single column
-	 * @return (object) $this
+	 *
+	 * @param mixed $a contains the list of all the column to add or a single column
+	 * @return object $this
 	 */
 	public function select($a){
 		if(is_array($a)){
@@ -246,8 +262,9 @@ class QueryBuilder{
 
 	/**
 	 * Jump a number of results of the query defined by the parameter
-	 * @param $v (int) number of results to jump
-	 * @return (object) $this
+	 *
+	 * @param int $v number of results to jump
+	 * @return object $this
 	 */
 	public function skip($v){
 		$this -> builder -> skip = (int)$v;
@@ -256,8 +273,9 @@ class QueryBuilder{
 	
 	/**
 	 * Take a specific number of results of the query defined by the parameter
-	 * @param $v (int) number of results to take
-	 * @return (object) $this
+	 *
+	 * @param int $v number of results to take
+	 * @return object $this
 	 */
 	public function take($v){
 		$this -> builder -> take = (int)$v;
@@ -267,7 +285,8 @@ class QueryBuilder{
 	
 	/**
 	 * Return the SQL code for select a range of results defined by skip and take
-	 * @return (string) SQL code
+	 *
+	 * @return string SQL code
 	 */
 	public function getLimitSQL(){
 		$s = isset($this -> builder -> skip) ? $this -> builder -> skip."," : "";
@@ -278,11 +297,12 @@ class QueryBuilder{
 	/**
 	 * Add a condition WHERE AND to the query where the results must have a specific value of a column.
 	 * The result may change with the change of the parameters
-	 * @param $v1 (mixed) Indicate the name of the column or a closure execute by advanced where methods. 
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param $v3 (string) optional value of the column
-	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
-	 * @return (object) $this
+	 *
+	 * @param mixed $v1 Indicate the name of the column or a closure execute by advanced where methods. 
+	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $v3 optional value of the column
+	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
+	 * @return object $this
 	 */
 	public function where($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
@@ -308,11 +328,12 @@ class QueryBuilder{
 	/**
 	 * Add a WHERE OR condition to the query where the results must have a value of a specific column.
 	 * The result may change with the change of the parameters
-	 * @param $v1 (mixed) Indicate the name of the column or a closure execute by advanced where methods. 
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param $v3 (string) optional value of the column
-	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
-	 * @return (object) $this
+	 *
+	 * @param mixed $v1 Indicate the name of the column or a closure execute by advanced where methods. 
+	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $v3 optional value of the column
+	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
+	 * @return object $this
 	 */
 	public function orWhere($v1,$v2 = NULL,$v3 = NULL,$v4 = true){
 
@@ -338,12 +359,13 @@ class QueryBuilder{
 	/**
 	 * Add a WHERE condition to the query where the results must have a value of specific column.
 	 * The result may change with the change of the parameters
-	 * @param $v1 (string) if $v2 is defined indicates the name of the column, otherwise the value of the primary column
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param $v3 (string) optional value of the column
-	 * @param $v4 (bool) ?? DA RIMUOVERE FORSE ??
-	 * @param $v5 (string) type of where AND|OR
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v1 if $v2 is defined indicates the name of the column, otherwise the value of the primary column
+	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $v3 optional value of the column
+	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
+	 * @param string $v5 type of where AND|OR
+	 * @return object clone of $this
 	 */
 	public function _where($v1,$v2 = NULL,$v3 = NULL,$v4 = true,$ao){
 		$t = clone $this;
@@ -391,9 +413,10 @@ class QueryBuilder{
 	
 	/**
 	 * Add a condition WHERE IN to the query where the results must have a value of the specific column present on the list of elements
-	 * @param $v (string) name of the column
-	 * @param $a (array) array of accepted values
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v name of the column
+	 * @param array $a array of accepted values
+	 * @return object clone of $this
 	 */
 	public function whereIn($v,$a){
 		$t = clone $this;
@@ -405,9 +428,10 @@ class QueryBuilder{
 
 	/**
 	 * Add a condition OR WHERE IN to the query where the results must have a value of the specific column present on the list of elements
-	 * @param $v (string) name of the column
-	 * @param $a (array) array of accepted values
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v name of the column
+	 * @param array $a array of accepted values
+	 * @return object clone of $this
 	 */
 	public function orWhereIn($v,$a){
 		$t = clone $this;
@@ -419,9 +443,10 @@ class QueryBuilder{
 
 	/**
 	 * Add a condition WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
-	 * @param $v1 (string) name of the column
-	 * @param $v2 (string) reserched value
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v1 name of the column
+	 * @param string $v2 reserched value
+	 * @return object clone of $this
 	 */
 	public function whereLike($v1,$v2){
 
@@ -432,9 +457,10 @@ class QueryBuilder{
 
 	/**
 	 * Add a condition OR WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
-	 * @param $v1 (string) name of the column
-	 * @param $v2 (string) reserched value
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v1 name of the column
+	 * @param string $v2 reserched value
+	 * @return object clone of $this
 	 */
 	public function orWhereLike($v1,$v2){
 
@@ -445,8 +471,9 @@ class QueryBuilder{
 
 	/**
 	 * Add a condition WHERE IS NULL to the query where the results must have a null value in the column
-	 * @param $v (string) name of the column
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
 	 */
 	public function whereIsNull($v){
 		$t = clone $this;
@@ -456,8 +483,8 @@ class QueryBuilder{
 	
     /**
 	 * Add a condition OR WHERE IS NULL to the query where the results must have a null value in the column
-	 * @param $v (string) name of the column
-	 * @return (object) clone of $this
+	 * @param string $v name of the column
+	 * @return object clone of $this
 	 */
 	public function orWhereIsNull($v){
 		$t = clone $this;
@@ -467,8 +494,9 @@ class QueryBuilder{
 	
 	/**
 	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
-	 * @param $v (string) name of the column
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
      */
 	public function whereIsNotNull($v){
 		$t = clone $this;
@@ -478,8 +506,9 @@ class QueryBuilder{
 	
 	/**
 	 * Add a condition OR WHERE IS NOT NULL to the query where the results must not have a null value in the column
-	 * @param $v (string) name of the column
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
 	 */
 	public function orWhereIsNotNull($v){
 		$t = clone $this;
@@ -489,8 +518,9 @@ class QueryBuilder{
 
 	/**
 	 * Inject a SQL code for obtain a condition AND WHERE to the query 
-	 * @param $v (string) SQL code
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v SQL code
+	 * @return object clone of $this
 	 */
 	public function whereRaw($v){
 		$t = clone $this;
@@ -500,8 +530,9 @@ class QueryBuilder{
 	
 	/**
 	 * Inject a SQL code for obtain a condition OR WHERE to the query 
-	 * @param $v (string) SQL code
-	 * @return (object) clone of $this
+	 *
+	 * @param string $v SQL code
+	 * @return object clone of $this
 	 */
 	public function orWhereRaw($v){
 		$t = clone $this;
@@ -511,8 +542,9 @@ class QueryBuilder{
 
 	/**
 	 * Return the SQL code for the condition WHERE
-	 * @param $where (bool) indicates if is necessary add a WHERE comand (true, by default) or not (false)
-	 * @return (string) SQL code
+	 *
+	 * @param bool $where indicates if is necessary add a WHERE comand (true, by default) or not (false)
+	 * @return string SQL code
 	 */
 	private function getWhereSQL($where = true){
 		$s = $where ? ' WHERE ' : '';
@@ -532,9 +564,10 @@ class QueryBuilder{
 
 	/**
 	 * Incements the value of the column
-	 * @param $c (string) name of the column
-	 * @param $v (array) value of increment
-	 * @return (object) clone of $this
+	 *
+	 * @param string $c name of the column
+	 * @param array $v value of increment
+	 * @return object clone of $this
 	 */
 	public function increment($c,$v = 1){
 		$t = clone $this;
@@ -544,9 +577,10 @@ class QueryBuilder{
 	
 	/**
 	 * Decrease the value of the column
-	 * @param $c (string) name of the column
-	 * @param $v (array) value of decrease
-	 * @return (object) clone of $this
+	 *
+	 * @param string $c name of the column
+	 * @param array $v value of decrease
+	 * @return object clone of $this
 	 */
 	public function decrement($c,$v = 1){
 		$t = clone $this;
@@ -563,11 +597,12 @@ class QueryBuilder{
 
 	/**
 	 * Effect a LEFT JOIN with an other table
-	 * @param $t (string) name of the second table
-	 * @param $v1 (string) name of the column of the primary table
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param $v3 (string) optional name of the column of the second table
-	 * @return (object) $this
+	 *
+	 * @param string $t name of the second table
+	 * @param string $v1 name of the column of the primary table
+	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param string $v3 optional name of the column of the second table
+	 * @return object $this
 	 */
 	public function leftJoin($t,$v1,$v2,$v3 = NULL){
 		return $this -> _join('LEFT JOIN',$t,$v1,$v2,$v3);
@@ -575,11 +610,12 @@ class QueryBuilder{
 
 	/**
 	 * Effect a RIGHT JOIN with an other table
-	 * @param $t (string) name of the second table
-	 * @param $v1 (string) name of the column of the primary table
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param $v3 (string) optional name of the column of the second table
-	 * @return (object) $this
+	 *
+	 * @param string $t name of the second table
+	 * @param string $v1 name of the column of the primary table
+	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param string $v3 optional name of the column of the second table
+	 * @return object $this
 	 */
 	public function rightJoin($t,$v1,$v2,$v3 = NULL){
 		return $this -> _join('RIGHT JOIN',$t,$v1,$v2,$v3);
@@ -587,11 +623,12 @@ class QueryBuilder{
 
 	/**
 	 * Effect a JOIN with an other table
-	 * @param $t (string) name of the second table
-	 * @param $v1 (string) name of the column of the primary table
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param $v3 (string) optional name of the column of the second table
-	 * @return (object) $this
+	 *
+	 * @param string $t name of the second table
+	 * @param string $v1 name of the column of the primary table
+	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param string $v3 optional name of the column of the second table
+	 * @return object $this
 	 */
 	public function join($t,$v1,$v2,$v3 = NULL){
 		return $this -> _join('JOIN',$t,$v1,$v2,$v3);
@@ -599,12 +636,13 @@ class QueryBuilder{
 
 	/**
 	 * Add a SQL code for a JOIN|LEFT JOIN|RIGHT JOIN
-	 * @param $ACT (string) type of JOIN
-	 * @param $table (string) name of the secondary table
-	 * @param $v1 (string) name of the column of the primary table
-	 * @param $v2 (string) if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param $v3 (string) optional name of the column of the second table
-	 * @return (object) clone of $this
+	 *
+	 * @param string $ACT type of JOIN
+	 * @param string $table name of the secondary table
+	 * @param string $v1 name of the column of the primary table
+	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param string $v3 optional name of the column of the second table
+	 * @return object clone of $this
 	 */
 	public function _join($ACT,$table,$v1,$v2,$v3 = NULL){
 
@@ -628,8 +666,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and insert a record ignoring duplicates
-	 * @param $v (string) array of elements to insert (name column => value column)
-	 * @return (object) $this
+	 *
+	 * @param string $v array of elements to insert (name column => value column)
+	 * @return object $this
 	 */
 	public function insertIgnore($v){
 		return $this -> insert($v,true);
@@ -637,9 +676,10 @@ class QueryBuilder{
 	
 	/**
 	 * Execute the query and insert a record if isn't present any record, otherwise update
-	 * @param $v (string) array of elements to insert|update (name column => value column)
-	 * @param $ignore (bool) if set recall insertIgnore(true) or insert(false)
-	 * @return (int) number of result affected from the query(update) or last ID insert(insert)
+	 *
+	 * @param string $v array of elements to insert|update (name column => value column)
+	 * @param bool $ignore if set recall insertIgnore(true) or insert(false)
+	 * @return int number of result affected from the query(update) or last ID insert(insert)
 	 */
 	public function insertUpdate($v,$ignore = false){
 		return $this -> count() == 0
@@ -651,9 +691,10 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and insert a record
-	 * @param $a (array) array of elements to insert (name column => value column)
-	 * @param $ignore (bool) ignore the duplicates(true) or reproduce an error(false)
-	 * @return (int) last id insert
+	 *
+	 * @param array $a array of elements to insert (name column => value column)
+	 * @param bool $ignore ignore the duplicates(true) or reproduce an error(false)
+	 * @return int last id insert
 	 */
 	public function insert($a,$ignore = false){
 
@@ -678,10 +719,11 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and insert at least a record
-	 * @param $nv (array) array made from the names of the column to insert
-	 * @param $av (array) array made from an array of values for each row
-	 * @param $ignore (bool) ignore the duplicates(true) or reproduce an error(false)
-	 * @return (int) last ID insert
+	 *
+	 * @param array $nv array made from the names of the column to insert
+	 * @param array $av array made from an array of values for each row
+	 * @param bool $ignore ignore the duplicates(true) or reproduce an error(false)
+	 * @return int last ID insert
 	 */
 	public function insertMultiple($nv,$av,$ignore = false){
 		
@@ -720,9 +762,10 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and update the record
-	 * @param $v1 (mixed) if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
-	 * @param $v2 (string) optional value of the column to update
-	 * @return (int) number of row involved in the update
+	 *
+	 * @param mixed $v1 if $v2 is defined indicates the name of the column to update, otherwise the array (name column => value columns)
+	 * @param string $v2 optional value of the column to update
+	 * @return int number of row involved in the update
 	 */
 
 	public function update($v1,$v2 = NULL){
@@ -757,9 +800,10 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and update the records
-	 * @param $v1 (array) array of columns to update in base a specific condition
-	 * @param $v2 (array) value of the column to update
-	 * @return (int) number of row involved in the update
+	 *
+	 * @param array $v1 array of columns to update in base a specific condition
+	 * @param array $v2 value of the column to update
+	 * @return int number of row involved in the update
 	 */
 	public function updateMultiple($v1,$v2){
 		if(empty($v1) || empty($v2))return false;
@@ -801,8 +845,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and delete the selected records
-	 * @param $v (string) optional indicates the name of the table from which delete the records (used in the join)
-	 * @return (int) number of rows involved in the elimination
+	 *
+	 * @param string $v optional indicates the name of the table from which delete the records (used in the join)
+	 * @return int number of rows involved in the elimination
 	 */
 	public function delete($v = ''){
 		return $this -> query("
@@ -814,8 +859,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute the elimination query
-	 * @param $v (string) optional indicates the name of the table from which delete the records (used in the join)
-	 * @return (int) number of rows involved in the elimination
+	 *
+	 * @param string $v optional indicates the name of the table from which delete the records (used in the join)
+	 * @return int number of rows involved in the elimination
 	 */
 	public function truncate(){
 		return $this -> query("
@@ -825,8 +871,9 @@ class QueryBuilder{
 
 	/**
 	 * Regroup the same results from a specific column 
-	 * @param $v (mixed) name or array of names of the column involved in the regroup
-	 * @return (object) clone of $this
+	 *
+	 * @param mixed $v name or array of names of the column involved in the regroup
+	 * @return object clone of $this
 	 */
 	public function groupBy($v){
 		$t = clone $this;
@@ -837,7 +884,8 @@ class QueryBuilder{
 
 	/**
 	 * Return the SQL code to execute the regroup
-	 * @return (string) SQL code
+	 *
+	 * @return string SQL code
 	 */
 	public function getGroupBySQL(){
 		$s = implode($this -> builder -> groupBy," , ");
@@ -847,8 +895,9 @@ class QueryBuilder{
 	
 	/**
 	 * Configure the column which will occupy the index of the array with the results
-	 * @param $v (string) name of the column
-	 * @return (string) name of the value
+	 *
+	 * @param string $v name of the column
+	 * @return string name of the value
 	 */
 	public function setIndexResult($v){
 		$this -> builder -> indexResult = $v;
@@ -857,7 +906,8 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return the selected records as result
-	 * @return (array) result of the query
+	 *
+	 * @return array result of the query
 	 */
 	public function lists(){
 		$r = $this -> assoc($this -> getSelectSQL());
@@ -875,7 +925,8 @@ class QueryBuilder{
 
 	/**
 	 * Execute the query and return the selected record as results
-	 * @return (array) result of the query
+	 *
+	 * @return array result of the query
 	 */
 	public function get(){
 		$r = $this -> take(1) -> lists();
@@ -885,7 +936,8 @@ class QueryBuilder{
 
 	/**
 	 * Return the SQL code for selection
-	 * @return (string) SQL code
+	 *
+	 * @return string SQL code
 	 */
 	public function getSelectSQL(){
 
@@ -912,7 +964,8 @@ class QueryBuilder{
 	
 	/**
 	 * Execute a reserch query of the number of the columns
-	 * @return (int) number of the columns
+	 *
+	 * @return int number of the columns
 	 */
 	public function countColumns(){
 		$c = DB::table('information_schema.COLUMNS');
@@ -924,8 +977,9 @@ class QueryBuilder{
 
 	/**
 	 * Execute a reserch query that search if a column exist
+	 *
 	 * @param (string) predetermined column type or SQL code that defined the type of the column
-	 * @return (object) $this
+	 * @return object $this
 	 */
 	public function hasColumn($v){
 		$c = DB::table('information_schema.COLUMNS');
@@ -937,8 +991,9 @@ class QueryBuilder{
 
 	/**
 	 * Defines the column to use
+	 *
 	 * @param (string) name of the column
-	 * @return (object) $this
+	 * @return object $this
 	 */
 	public function column($v){
 		$this -> schema = new stdClass();
@@ -951,8 +1006,9 @@ class QueryBuilder{
 
 	/**
 	 * Return the SQL code for the selection
+	 *
 	 * @param (string) predetermined column type or SQL code that defined the type of the column
-	 * @return (object) $this
+	 * @return object $this
 	 */
 	public function type($t){
 
@@ -976,7 +1032,8 @@ class QueryBuilder{
 	
 	/**
 	 * Makes the column a primary key
-	 * @return (object) $this
+	 *
+	 * @return object $this
 	 */
 	public function primary(){
 		$this -> schema -> add[] = " PRIMARY KEY({$this -> schema -> column}) ";
@@ -985,7 +1042,8 @@ class QueryBuilder{
 
 	/**
 	 * Makes the column a unique key
-	 * @return (object) $this
+	 *
+	 * @return object $this
 	 */
 	public function unique(){
 		$this -> schema -> add[] = " UNIQUE({$this -> schema -> column}) ";
@@ -995,7 +1053,8 @@ class QueryBuilder{
 
 	/**
 	 * Makes the column an index
-	 * @return (object) $this
+	 *
+	 * @return object $this
 	 */
 	public function index(){
 		$this -> schema -> add[] = " INDEX({$this -> schema -> column}) ";
@@ -1004,9 +1063,10 @@ class QueryBuilder{
 
 	/**
 	 * Makes the column a foreign key
-	 * @param $t (string) name of the table referenced
-	 * @param $v (string) name of the column referenced
-	 * @return (object) $this
+	 *
+	 * @param string $t name of the table referenced
+	 * @param string $v name of the column referenced
+	 * @return object $this
 	 */
 	public function foreign($t,$v){
 		if(!empty($this -> schema -> foreign -> column ))
@@ -1019,7 +1079,8 @@ class QueryBuilder{
 
 	/**
 	 * Add a SQL code everytime there is an elimination
-	 * @param $c (string) SQL code
+	 *
+	 * @param string $c SQL code
 	 */
 	public function onDelete($c){
 		$this -> schema -> foreign -> onDelete = " ON DELETE {$c} ";
@@ -1027,7 +1088,8 @@ class QueryBuilder{
 	
 	/**
 	 * Add a SQL code everytime there is an update
-	 * @param $c (string) SQL code
+	 *
+	 * @param string $c SQL code
 	 */
 	public function onUpdate($c){
 		$this -> schema -> foreign -> onDelete = " ON UPDATE {$c} ";
@@ -1052,7 +1114,8 @@ class QueryBuilder{
 
 	/**
 	 * Execute an alteration query of the pattern of the database according to setted parameters
-	 * @return (object) result of the query
+	 *
+	 * @return object result of the query
 	 */
 	public function alter(){
 		if(!DB::getAlterSchema()) return;
@@ -1077,7 +1140,8 @@ class QueryBuilder{
 
 	/**
 	 * Execute a reset query of the counter auto_increment
-	 * @return (object) result of the query
+	 *
+	 * @return object result of the query
 	 */
 	public function resetAutoIncrement(){
 		return $this -> query("ALTER TABLE {$this -> builder -> table} AUTO_INCREMENT = 1");
@@ -1085,6 +1149,7 @@ class QueryBuilder{
 	
 	/**
 	 * Add the name of the table to the internal cache. That is used to avoid the request of existance of a table.
+	 *
 	 * @param (string) name of the table
 	 */
 	public function addCacheNameTable($r){
@@ -1093,7 +1158,8 @@ class QueryBuilder{
 
 	/**
 	 * Return the existance of a table in the cache list
-	 * @return (bool) the table is already check(true) or not(false)
+	 *
+	 * @return bool the table is already check(true) or not(false)
 	 */
 	public function getCacheNameTable($r){
 		return in_array($r,self::$cacheAlter);

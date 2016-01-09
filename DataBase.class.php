@@ -1,8 +1,7 @@
 <?php
 
 /**
- * @class DB
- * Class Database, permits to handle connections and calls to DBMS with the PDO
+ * Database, permits to handle connections and calls to DataBase with PDO
  */
 class DB{
 
@@ -63,7 +62,8 @@ class DB{
 	
 	/**
 	 * Select the database
-	 * @param $db (string) name of database
+	 *
+	 * @param string $db name of database
 	 */
 	public static function select($db){
 		if(self::getAlterSchema())
@@ -85,7 +85,8 @@ class DB{
 	
 	/**
 	 * Return the name of the database
-	 * @return (string) name database
+	 *
+	 * @return string name database
 	 */
 	public static function getName(){
 		return self::$config['database'];
@@ -93,7 +94,8 @@ class DB{
 
 	/**
 	 * Return the value of alter_schema
-	 * @return (string) name database
+	 *
+	 * @return string name database
 	 */
 	public static function getAlterSchema(){
 		return self::$config['alter_schema'];
@@ -101,7 +103,8 @@ class DB{
 	
 	/**
 	 * Return information about the database
-	 * @return (string) information about the database
+	 *
+	 * @return string information about the database
 	 */
 	public static function getServerInfo(){
 		return 
@@ -111,8 +114,9 @@ class DB{
 
 	/**
 	 * Execute the escape function
-	 * @param $s (string) string to filtrate
-	 * @return (string) string to filtrate
+	 *
+	 * @param string $s string to filtrate
+	 * @return string string to filtrate
 	 */
 	public static function quote($s){
 		return $s;
@@ -120,8 +124,9 @@ class DB{
 	
 	/**
 	 * Add characters of escape on the string for a query
+	 *
 	 * @return $s (string) string to filtrate
-	 * @return (string) string to filtrate
+	 * @return string string to filtrate
 	 */
 	public static function escape($s){
 		$s = str_replace("_","\_",$s);
@@ -131,8 +136,9 @@ class DB{
 
 	/**
 	 * Execute the query
-	 * @param $query (string) SQL code
-	 * @return (object) PDO object
+	 *
+	 * @param string $query SQL code
+	 * @return object PDO object
 	 */
 	public static function query($query){
 
@@ -154,9 +160,10 @@ class DB{
 
 	/**
 	 * Execute the query with specific values to filtrate
-	 * @param $query (string) SQL code
-	 * @param $a (array) array of values
-	 * @return (object) PDO object
+	 *
+	 * @param string $query SQL code
+	 * @param array $a array of values
+	 * @return object PDO object
 	 */
 	public static function execute($query,$a){
 		
@@ -188,8 +195,9 @@ class DB{
 	
 	/**
 	 * Execute the query and return a result as array
-	 * @param $q (object) PDO object
-	 * @return (array) result
+	 *
+	 * @param object $q PDO object
+	 * @return array result
 	 */
 	public static function fetch($q){
 		return $q -> fetchAll(PDO::FETCH_ASSOC);
@@ -197,8 +205,9 @@ class DB{
 
 	/**
 	 * Count the results of a query
-	 * @param $q (object) PDO object
-	 * @return (int) number of result
+	 *
+	 * @param object $q PDO object
+	 * @return int number of result
 	 */
 	public static function count($q){
 		return $q -> rowCount();
@@ -214,7 +223,8 @@ class DB{
 	
 	/**
 	 * Print the error
-	 * @param $error (string) body of the error
+	 *
+	 * @param string $error body of the error
 	 */
 	private static function printError($error){
 		echo "<h1>DataBase Error</h1>";
@@ -226,7 +236,8 @@ class DB{
 
 	/**
 	 * Get the value of the last field AUTO_INCREMENT insert
-	 * @return (int) last value of the field AUTO_INCREMENT
+	 *
+	 * @return int last value of the field AUTO_INCREMENT
 	 */
 	public static function getInsertID(){
 		return self::$con -> lastInsertId();
@@ -254,7 +265,8 @@ class DB{
 
 	/**
 	 * Save the current status of the table
-	 * @param $table (string) name of the table
+	 *
+	 * @param string $table name of the table
 	 */
 	public static function save($table){
 		self::$rollbackLastTable = self::_save($table);
@@ -283,7 +295,8 @@ class DB{
 
 	/**
 	 * Save a table
-	 * @param $table (string) name of the table
+	 *
+	 * @param string $table name of the table
 	 */
 	private static function _save($table){
 		do{
@@ -318,9 +331,10 @@ class DB{
 
 	/**
 	 * Restore a table
-	 * @param $t1 (string) name of table to restore
-	 * @param $t2 (stirng) name of table to take data
-	 * @return (bool) result of the query
+	 *
+	 * @param string $t1 name of table to restore
+	 * @param stirng $t2 name of table to take data
+	 * @return bool result of the query
 	 */
 	private static function _restore($t1,$t2){
 
@@ -330,10 +344,11 @@ class DB{
 
 	/**
 	 * Execute a rollback
-	 * @param $n (int) number of operations to going back
-	 * @param $id (int) ID of the operation from which start
-	 * @param $overwrite (bool) overwrite the records during the rollback
-	 * @return (bool) result of the operation
+	 *
+	 * @param int $n number of operations to going back
+	 * @param int $id ID of the operation from which start
+	 * @param bool $overwrite overwrite the records during the rollback
+	 * @return bool result of the operation
 	 */
 	public static function rollback($n = 1,$id = NULL,$overwrite = true){
 
@@ -367,8 +382,9 @@ class DB{
 
 	/**
 	 * Check if a table exists
-	 * @param $v (string) name of the table
-	 * @return (bool) return if the table exists (true) or not (false)
+	 *
+	 * @param string $v name of the table
+	 * @return bool return if the table exists (true) or not (false)
 	 */
 	public static function hasTable($v){
 		return self::count(self::query("SHOW TABLES LIKE '{$v}'")) == 1;
@@ -376,9 +392,10 @@ class DB{
 
 	/**
 	 * Create a new object QueryBuilder
-	 * @param $v (string) name of the table
-	 * @param $as (string) alias of the table
-	 * @return (object) QueryBuilder object
+	 *
+	 * @param string $v name of the table
+	 * @param string $as alias of the table
+	 * @return object QueryBuilder object
 	 */
 	public static function table($v,$as = ''){
 		return new QueryBuilder($v,$as);
