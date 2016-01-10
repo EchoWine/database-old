@@ -38,23 +38,24 @@ class QueryBuilder{
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
 	 * 
-	 *
-	 * @param string $v name of the table
-	 * @param string $as optional alias of the table
+	 * @param string|array|closure $v
 	 * @return string name alias of the table
 	 */
-	public function __construct($v,$as = ''){
+	public function __construct($v){
 
 		$this -> builder = new stdClass();
 		$this -> builder -> prepare = array();
 
 		/* Controllo che si tratti di una select annidata */
-		if(is_object($v) && ($v instanceof Closure)){
+		if($v instanceof Closure){
 			$t = $v();
-			$v = "(".$t -> getUnionSQL().")";
-			if(empty($as)) $as = self::getTableAsRandom();
+			$as = self::getTableAs();
+			$v = "(".$t -> getUnionSQL().") as $as";
 			$this -> builder -> prepare = $t -> builder -> prepare;
 		}
+
+
+		if(!is_array($v))$v = [$v];
 
 		$this -> builder -> table = $v;
 		$this -> builder -> agg = [];
@@ -72,18 +73,24 @@ class QueryBuilder{
 		$this -> builder -> indexResult = "";
 		$this -> builder -> tmp_prepare = [];
 
-		$this -> count = self::$counter;
-		self::$counter++;
+		$this -> setCounter();
 
 		return $this;
 	}
 	
 	/**
+	 * Increment the counter
+	 */
+	public function setCounter(){
+		$this -> count = self::$counter++;
+	}
+
+	/**
 	 * Return a random name (unused) to use as alias for the query
 	 *
 	 * @return string alias name of the table
 	 */
-	public static function getTableAsRandom(){
+	public static function getTableAs(){
 		$c = "t".count(self::$tableAs);
 		self::$tableAs[] = $c;
 		return $c;
@@ -94,6 +101,7 @@ class QueryBuilder{
 	 */
 	public function __clone(){
 		$this -> builder = clone $this -> builder;
+		$this -> setCounter();
 	}
 
 	/**
@@ -539,7 +547,7 @@ class QueryBuilder{
 	 */
 	public function whereRaw(string $v){
 		$t = clone $this;
-		$t -> builder -> andWhere[] = "(".$t -> setPrepare($v).")";
+		$t -> builder -> andWhere[] = "($v)";
 		return $t;
 	}
 	
@@ -551,7 +559,7 @@ class QueryBuilder{
 	 */
 	public function orWhereRaw(string $v){
 		$t = clone $this;
-		$t -> builder -> orWhere[] = "(".$t -> setPrepare($v).")";
+		$t -> builder -> orWhere[] = "($v)";
 		return $t;
 	}
 
@@ -609,7 +617,7 @@ class QueryBuilder{
 	 * @return string name table
 	 */
 	public function getBuilderTable(){
-		return $this -> builder -> table;
+		return implode($this -> builder -> table,",");
 	}
 
 	/**

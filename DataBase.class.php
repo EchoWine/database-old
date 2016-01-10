@@ -287,12 +287,11 @@ class DB{
 	/**
 	 * Create a new object QueryBuilder
 	 *
-	 * @param string $v name of the table
-	 * @param string $as alias of the table
+	 * @param string|array|closure $table
 	 * @return object QueryBuilder object
 	 */
-	public static function table(string $v,$as = ''){
-		return new QueryBuilder($v,$as);
+	public static function table($table){
+		return new QueryBuilder($table);
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
