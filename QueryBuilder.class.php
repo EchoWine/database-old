@@ -1134,7 +1134,7 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Add a SQL code everytime there is an elimination
+	 * Add a SQL code everytime there is a delete
 	 *
 	 * @param string $c SQL code
 	 */
