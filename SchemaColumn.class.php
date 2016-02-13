@@ -15,7 +15,9 @@ class SchemaColumn{
 			$unique = false,
 			$auto_increment = false,
 			$index = false,
-			$foreign = null;
+			$constraint = '';
+
+	public $foreignColumn,$foreignTable,$foreignDelete,$foreignUpdate;
 
 	public function __construct($params){
 
@@ -68,37 +70,44 @@ class SchemaColumn{
 	}
 
 	public function setForeign(string $table,string $column){
-		$this -> foreign -> table = $table;
-		$this -> foreign -> column = $column;
+		$this -> foreignTable = $table;
+		$this -> foreignColumn = $column;
 	}
 
 	public function setForeignDelete($v){
-		$this -> foreign -> delete = $v;
+		$this -> foreignDelete = $v;
 	}
 
 	public function setForeignUpdate($v){
-		$this -> foreign -> update = $v;
+		$this -> foreignUpdate = $v;
+	}
+
+	public function setConstraint($v){
+		$this -> constraint = $v;
 	}
 
 	public function getForeign(){
-		return $this -> foreign;
+		return !empty($this -> foreignTable) && !empty($this -> foreignColumn);
 	}
 
+	public function getConstraint(){
+		return $this -> constraint;
+	}
 
 	public function getForeignTable(){
-		return $this -> foreign -> table;
+		return $this -> foreignTable;
 	}
 
 	public function getForeignColumn(){
-		return $this -> foreign -> column;
+		return $this -> foreignColumn;
 	}
 
 	public function getForeignDelete(){
-		return $this -> foreign -> delete;
+		return $this -> foreignDelete;
 	}
 
 	public function getForeignUpdate(){
-		return $this -> foreign -> update;
+		return $this -> foreignUpdate;
 	}
 
 	public function setAutoIncrement(bool $auto_increment){
@@ -139,7 +148,19 @@ class SchemaColumn{
 		&& $this -> getAutoIncrement() == $c -> getAutoIncrement()
 		&& $this -> getPrimary() == $c -> getPrimary()
 		&& $this -> getIndex() == $c -> getIndex()
-		&& $this -> getNull() == $c -> getNull();
+		&& $this -> getNull() == $c -> getNull()
+		&& $this -> getName() == $c -> getName()
+		&& $this -> equalsForeign($c);
+	}
+
+	public function equalsForeign(SchemaColumn $c){
+		return
+		$this -> getForeignTable() == $c -> getForeignTable()
+		&& $this -> getForeignColumn() == $c -> getForeignColumn();
+		/*
+		&& $this -> getForeignDelete() == $c -> getForeignDelete()
+		&& $this -> getForeignUpdate() == $c -> getForeignUpdate();
+		*/
 	}
 
 	public function getKeys(){

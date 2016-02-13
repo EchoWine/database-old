@@ -43,6 +43,15 @@ class Schema{
 			}
 
 
+			foreach(DB::fetch("select TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME from information_schema.key_column_usage WHERE CONSTRAINT_SCHEMA = '".DB::getName()."' AND TABLE_NAME = '{$table -> getName()}' AND REFERENCED_TABLE_NAME IS NOT NULL") as $k){
+
+				$c = $table -> getColumn($k['COLUMN_NAME']);
+
+				$c -> setConstraint($k['CONSTRAINT_NAME']);
+				$c -> setForeign($k['REFERENCED_TABLE_NAME'],$k['REFERENCED_COLUMN_NAME']);
+
+			}
+
 			self::$tables[$table -> getName()] = $table;
 		}
 

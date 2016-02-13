@@ -48,6 +48,15 @@ class SchemaTable{
 		return false;
 	}
 
+	public function getPrimary(){
+		foreach($this -> columns as $k){
+			if($k -> getPrimary())
+				return $k;
+		}
+
+		return null;
+	}
+
 	public function hasAutoIncrement(){
 		foreach($this -> columns as $k){
 			if($k -> getAutoIncrement())

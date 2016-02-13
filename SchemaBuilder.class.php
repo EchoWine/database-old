@@ -198,6 +198,7 @@ class SchemaBuilder{
 	public function foreign(string $t,string $v){
 		
 		$this -> schema -> setForeign($t,$v);
+		$this -> index();
 		return $this;
 	}
 
@@ -241,14 +242,6 @@ class SchemaBuilder{
 
 
 
-		# Actual schema
-		$a = Schema::getTable($this -> getTable()) -> getColumn($this -> schema -> getName());
-
-		# New schema
-		$n = $this -> schema;
-
-		self::$tables[$this -> getTable()] -> setColumn($n);
-
 		# Check if column doesn't exists
 		if(!$this -> hasColumn($this -> schema -> getName())){
 			$this -> query($this -> SQL_addColumn());
@@ -257,38 +250,59 @@ class SchemaBuilder{
 			Schema::getTable($this -> getTable()) -> addColumn($this -> schema);
 		}
 
-		# Check if there is any difference between actual schema and new
-		if($a == null || !$n -> equals($a)){
+		# Actual schema
+		$a = Schema::getTable($this -> getTable()) -> getColumn($this -> schema -> getName());
 
-			if(Schema::getTable($this -> getTable()) -> hasPrimary()){
+		# New schema
+		$n = $this -> schema;
+			
+		# Update schema
+		self::$tables[$this -> getTable()] -> setColumn($n);
+
+
+		# Check if there is any difference between actual schema and new
+		if(!$n -> equals($a)){
+
+
+			# Drop X Primary key if
+				# Actual: primary, New: Not primary
+				# There is a primary key that isn't new. (There can be only one primary key)
+			$p = Schema::getTable($this -> getTable()) -> getPrimary();
+
+			if(($a -> getPrimary() && !$n -> getPrimary()) || $n -> getPrimary() && $p != null && !$p -> equals($n)){
+
+				$primary = $p !== null ? $p : $n;
+
+				$this -> query($this -> SQL_editColumnBasics($this -> table,$primary));
+
 				$this -> query($this -> SQL_dropPrimaryKey($this -> table));
 				Schema::getTable($this -> getTable()) -> dropPrimary();
 			}
 
-			# Check if actual is a primary key
-			if($a -> getPrimary()){
-
-				# Reset column
-				$this -> query($this -> SQL_editColumnBasics($this -> table));
-
-			}
 			
 
-			# Update index column
+			# Update foreign column
+			if(!$n -> equalsForeign($a) && $a -> getForeign())
+				$this -> query("ALTER TABLE {$this -> table} DROP FOREIGN KEY {$a -> getConstraint()}");
 
+			
+			if($n -> getForeign())
+				$this -> query($this -> SQL_addColumnKey('foreign'));
+			
+
+			print_r($n);
+			print_r($a);
+			# Update index column
 			if($a -> getIndex() && !$n -> getIndex())
-					$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getName()}");
+				$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getName()}");
 
 			if(!$a -> getIndex() && $n -> getIndex())
 				$this -> query($this -> SQL_addColumnKey('index'));
 
 
-
 			# Update column
 			$this -> query($this -> SQL_editColumn());
-			
 
-			# Update schema
 			Schema::getTable($this -> getTable()) -> setColumn($n);
 		}
 
@@ -322,9 +336,9 @@ class SchemaBuilder{
 		return "ALTER TABLE {$this -> getTable()} CHANGE COLUMN {$this -> schema -> getName()} {$this -> SQL_column()}";
 	}
 
-	public function SQL_editColumnBasics(){
-		return "ALTER TABLE {$this -> table} MODIFY {$this -> schema -> getName()} 
-		{$this -> SQL_columnType($ths -> schema -> getType(),$this -> schema -> getLength())}";
+	public function SQL_editColumnBasics($table,$schema){
+		return "ALTER TABLE {$table} MODIFY {$schema -> getName()} 
+		{$this -> SQL_columnType($schema -> getType(),$schema -> getLength())}";
 	}
 
 
