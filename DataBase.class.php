@@ -30,6 +30,11 @@ class DB{
 	 * Contains the last name of the table and it's used for restore
 	 */
 	public static $restoreLastTable;
+
+	/**
+	 * All information about schema/tables
+	 */
+	public static $schema = [];
 	
 	/**
 	 * Create a new connection
@@ -59,6 +64,7 @@ class DB{
 
 		self::select($cfg['database']);
 		self::iniRestore();
+		Schema::ini();
 
 	}
 	
@@ -188,11 +194,13 @@ class DB{
 	/**
 	 * Execute the query and return a result as array
 	 *
-	 * @param PDOStatement $q PDO object
+	 * @param PDOStatement|SQL code $q PDO object
 	 * @return array result
 	 */
-	public static function fetch(PDOStatement $q){
-		return $q -> fetchAll(PDO::FETCH_ASSOC);
+	public static function fetch($q,$nIndex = true){
+		if(is_string($q))$q = DB::query($q);
+
+		return $nIndex ? $q -> fetchAll() : $q -> fetchAll(PDO::FETCH_ASSOC);
 	}
 
 	/**
@@ -219,6 +227,7 @@ class DB{
 	 * @param string $error body of the error
 	 */
 	private static function printError(string $error){
+		self::printLog();
 		die("<h1>DataBase Error</h1>$error<br>");
 	}
 		
@@ -281,7 +290,7 @@ class DB{
 	 * @return bool return if the table exists (true) or not (false)
 	 */
 	public static function hasTable(string $v){
-		return self::count(self::query("SHOW TABLES LIKE '{$v}'")) == 1;
+		return Schema::hasTable($v);
 	}
 
 	/**
@@ -293,6 +302,17 @@ class DB{
 	public static function table($table){
 		return new QueryBuilder($table);
 	}
+
+	/**
+	 * Create a new object SchemaBuilder
+	 *
+	 * @param string $table
+	 * @return object SchemaBuilder object
+	 */
+	public static function schema($table){
+		return new SchemaBuilder($table);
+	}
+
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// 

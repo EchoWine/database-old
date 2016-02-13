@@ -26,11 +26,6 @@ class QueryBuilder{
 	public $schema;
 
 	/**
-	 * List of all the names of the tables which existence is known
-	 */
-	public static $cacheAlter = array();
-
-	/**
 	 * List of all the alias made automatically for the nested selection query
 	 */
 	public static $tableAs = array();
@@ -894,18 +889,6 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Execute the elimination query
-	 *
-	 * @param string $v optional indicates the name of the table from which delete the records (used in the join)
-	 * @return int number of rows involved in the elimination
-	 */
-	public function truncate(){
-		return $this -> query("
-			TRUNCATE {$this -> getBuilderTable()} 
-		");
-	}
-
-	/**
 	 * Regroup the same results from a specific column 
 	 *
 	 * @param mixed $v name or array of names of the column involved in the regroup
@@ -1016,183 +999,6 @@ class QueryBuilder{
 		return $c;
 	}
 
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	
-	/**
-	 * Execute a reserch query of the number of the columns
-	 *
-	 * @return int number of the columns
-	 */
-	public function countColumns(){
-		$c = DB::table('information_schema.COLUMNS');
-		
-		return $c -> where('TABLE_SCHEMA',DB::getName())
-			-> where('TABLE_NAME',$this -> getBuilderTable())
-			-> count();
-	}
-
-	/**
-	 * Execute a reserch query that search if a column exist
-	 *
-	 * @param string $v predetermined column type or SQL code that defined the type of the column
-	 * @return object $this
-	 */
-	public function hasColumn(string $v){
-		$c = DB::table('information_schema.COLUMNS');
-		return $c -> where('TABLE_SCHEMA',DB::getName())
-			-> where('TABLE_NAME',$this -> getBuilderTable())
-			-> where('COLUMN_NAME',$v)
-			-> count() == 1;
-	}
-
-	/**
-	 * Defines the column to use
-	 *
-	 * @param string $v name of the column
-	 * @return object $this
-	 */
-	public function column(string $v){
-		$this -> schema = new stdClass();
-		$this -> schema -> column = strtolower($v);
-		$this -> schema -> add = array();
-		$this -> schema -> foreign = new stdClass();
-
-		return $this;
-	}
-
-	/**
-	 * Return the SQL code for the selection
-	 *
-	 * @param string $t predetermined column type or SQL code that defined the type of the column
-	 * @return object $this
-	 */
-	public function type(string $t){
-
-		switch($t){
-			case 'timestamp': $t = "INT(10)"; break;
-			case 'varchar': $t = "VARCHAR(55)"; break;
-			case 'md5': $t = "CHAR(32)"; break;
-			case 'id': $t = "BIGINT(11) AUTO_INCREMENT PRIMARY KEY"; break;
-			case 'big_int': $t = "BIGINT(11) "; break;
-			case 'tiny_int': $t = "TINYINT(1) "; break;
-			case 'text': $t = 'TEXT'; break;
-			case 'float': $t = "DOUBLE"; break;
-			case 'cod': $t = "VARCHAR(11)"; break;
-			case 'string': $t = "VARCHAR(80)"; break;
-		}
-
-		$this -> schema -> add[] = "{$this -> schema -> column} {$t}";
-		return $this;
-	}
-
-	
-	/**
-	 * Makes the column a primary key
-	 *
-	 * @return object $this
-	 */
-	public function primary(){
-		$this -> schema -> add[] = " PRIMARY KEY({$this -> schema -> column}) ";
-		return $this;
-	}
-
-	/**
-	 * Makes the column a unique key
-	 *
-	 * @return object $this
-	 */
-	public function unique(){
-		$this -> schema -> add[] = " UNIQUE({$this -> schema -> column}) ";
-		return $this;
-
-	}
-
-	/**
-	 * Makes the column an index
-	 *
-	 * @return object $this
-	 */
-	public function index(){
-		$this -> schema -> add[] = " INDEX({$this -> schema -> column}) ";
-		return $this;
-	}
-
-	/**
-	 * Makes the column a foreign key
-	 *
-	 * @param string $t name of the table referenced
-	 * @param string $v name of the column referenced
-	 * @return object $this
-	 */
-	public function foreign(string $t,string $v){
-		if(!empty($this -> schema -> foreign -> column ))
-			$this -> updateForeign();
-
-		$this -> schema -> foreign -> table = $t;
-		$this -> schema -> foreign -> column = $v;
-		return $this;
-	}
-
-	/**
-	 * Add a SQL code everytime there is a delete
-	 *
-	 * @param string $c SQL code
-	 */
-	public function onDelete(string $c){
-		$this -> schema -> foreign -> onDelete = " ON DELETE {$c} ";
-	}
-	
-	/**
-	 * Add a SQL code everytime there is an update
-	 *
-	 * @param string $c SQL code
-	 */
-	public function onUpdate(string $c){
-		$this -> schema -> foreign -> onDelete = " ON UPDATE {$c} ";
-	}
-
-	/**
-	 * Return the SQL code that define the foreign keys
-	 */
-	private function updateForeign(){
-		$this -> schema -> add[] = "
-			ADD FOREIGN KEY ({$this -> schema -> column}) 
-			REFERENCES {$this -> schema -> foreign -> table}({$this -> schema -> foreign -> column})
-			{$this -> schema -> foreign -> onDelete}
-			{$this -> schema -> foreign -> onUpdate}
-		";
-
-		$this -> schema -> foreign -> column = "";
-		$this -> schema -> foreign -> table = "";
-		$this -> schema -> foreign -> onDelete = "";
-		$this -> schema -> foreign -> onUpdate = "";
-	}
-
-	/**
-	 * Execute an alteration query of the pattern of the database according to setted parameters
-	 *
-	 * @return object result of the query
-	 */
-	public function alter(){
-		if(!DB::getAlterSchema()) return;
-
-		
-		if(!$this -> getCacheNameTable($this -> getBuilderTable())){
-			$this -> addCacheNameTable($this -> getBuilderTable());
-			if(!$this -> builder -> is_table && !DB::hasTable($this -> getBuilderTable())){
-				$this -> builder -> is_table = true;
-				$this -> query("CREATE TABLE IF NOT EXISTS {$this -> getBuilderTable()}( ".implode($this -> schema -> add,",").")");
-			}
-		}
-
-		if(!$this -> hasColumn($this -> schema -> column)){
-			return $this -> query("
-				ALTER TABLE {$this -> getBuilderTable()} ADD ".implode($this -> schema -> add,", ADD ")."
-			");
-		}
-
-		return false;
-	}
 
 	/**
 	 * Execute a reset query of the counter auto_increment
@@ -1204,22 +1010,14 @@ class QueryBuilder{
 	}
 	
 	/**
-	 * Add the name of the table to the internal cache. That is used to avoid the request of existance of a table.
+	 * Eliminate all record in table
 	 *
-	 * @param string $n name of the table
+	 * @return result query
 	 */
-	public function addCacheNameTable(string $n){
-		self::$cacheAlter[] = $n;
-	}
-
-	/**
-	 * Return the existance of a table in the cache list
-	 *
-	 * @param string $n name table
-	 * @return bool the table is already check(true) or not(false)
-	 */
-	public function getCacheNameTable(string $n){
-		return in_array($n,self::$cacheAlter);
+	public function truncate(){
+		return $this -> query("
+			TRUNCATE {$this -> getBuilderTable()} 
+		");
 	}
 
 }
