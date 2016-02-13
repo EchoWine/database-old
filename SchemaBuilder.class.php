@@ -290,8 +290,6 @@ class SchemaBuilder{
 				$this -> query($this -> SQL_addColumnKey('foreign'));
 			
 
-			print_r($n);
-			print_r($a);
 			# Update index column
 			if($a -> getIndex() && !$n -> getIndex())
 				$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getName()}");
@@ -304,6 +302,8 @@ class SchemaBuilder{
 			$this -> query($this -> SQL_editColumn());
 
 			Schema::getTable($this -> getTable()) -> setColumn($n);
+
+			return true;
 		}
 
 		return false;
