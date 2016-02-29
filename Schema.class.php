@@ -22,6 +22,7 @@ class Schema{
 				$type = preg_replace('/\((.*)\)/','',$k['Type']);
 
 				$column = new SchemaColumn([
+					'table' => $table -> getName(),
 					'name' => $k['Field'],
 					'type' => $type,
 					'length' => isset($length[1]) ? $length[1]  : null,
@@ -34,12 +35,12 @@ class Schema{
 
 				$table -> addColumn($column);
 
-
 			}
 
 			# Get index
 			foreach(DB::fetch("SHOW INDEX FROM {$table -> getName()}") as $k){
-				$table -> getColumn($k['Column_name']) -> setIndex(true);
+				if(!$table -> getColumn($k['Column_name']) -> getPrimary())
+					$table -> getColumn($k['Column_name']) -> setIndex(true);
 			}
 
 
@@ -55,6 +56,27 @@ class Schema{
 			self::$tables[$table -> getName()] = $table;
 		}
 
+	}
+
+	public static function dropMissing(){
+		foreach(self::$tables as $n => $k){
+			if(!isset(SchemaBuilder::$tables[$n]))
+				DB::schema($n) -> drop();
+
+			else{
+				$table = SchemaBuilder::$tables[$n];
+
+				foreach($k -> getColumns() as $name_column => $column){
+					if($table -> getColumn($name_column) == null){
+						DB::schema($n) -> dropColumn($name_column);
+					}
+				}
+
+				
+				
+			}
+
+		}
 	}
 
 	public static function hasTable($table){
@@ -82,6 +104,26 @@ class Schema{
 	public static function addTable($table,$columns = []){
 		$table = new SchemaTable($table,$columns);
 		self::$tables[$table -> getName()] = $table;
+	}
+
+	public static function getAllForeignKeyTo($table){
+		$r = [];
+		foreach(self::$tables as $n => $k){
+			$c = $k -> getForeignKeyTo($table);
+			if($c !== null)$r[] = $c;
+		}
+
+		return $r;
+	}
+
+	public static function getAllForeignKeyToColumn($table,$column){
+		$r = [];
+		foreach(self::$tables as $n => $k){
+			$c = $k -> getForeignKeyToColumn($table,$column);
+			if($c !== null)$r[] = $c;
+		}
+
+		return $r;
 	}
 
 

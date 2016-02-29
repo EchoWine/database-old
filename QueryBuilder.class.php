@@ -624,7 +624,7 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function leftJoin(string $t,string $v1,string $v2,string $v3 = NULL){
+	public function leftJoin(string $t,string $v1 = null,string $v2 = null,string $v3 = NULL){
 		return $this -> _join('LEFT JOIN',$t,$v1,$v2,$v3);
 	}
 
@@ -637,7 +637,7 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function rightJoin(string $t,string $v1,string $v2,string $v3 = NULL){
+	public function rightJoin(string $t,string $v1 = null,string $v2 = null,string $v3 = NULL){
 		return $this -> _join('RIGHT JOIN',$t,$v1,$v2,$v3);
 	}
 
@@ -650,7 +650,7 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function join(string $t,string $v1,string $v2,string $v3 = NULL){
+	public function join(string $t,string $v1 = NULL,string $v2 = NULL,string $v3 = NULL){
 		return $this -> _join('JOIN',$t,$v1,$v2,$v3);
 	}
 
@@ -664,11 +664,26 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object clone of $this
 	 */
-	public function _join(string $ACT,string $table,string $v1,string $v2,string $v3 = NULL){
+	public function _join(string $ACT,string $table,string $v1 = null,string $v2 = Null,string $v3 = NULL){
 
 		$t = clone $this;
 
-		if(isset($v3)){
+		if($v1 == null && $v2 == null){
+
+			$k1 = Schema::getTable($table) -> getForeignKeyTo($this -> getBuilderTable());
+			$k2 = Schema::getTable($this -> getBuilderTable()) -> getForeignKeyTo($table);
+			if($k1 !== null)
+				$k = $k1;
+			else if($k2 !== null)
+				$k = $k2;
+			else
+				die("Error with foreign key");
+			
+			$c1 = $k -> getForeignTable().".".$k -> getForeignColumn();
+			$c2 = $k -> getTable().".".$k -> getName();
+			$op = '=';
+
+		}else if(isset($v3)){
 			$c1 = $v1;
 			$op = $v2;
 			$c2 = $v3;

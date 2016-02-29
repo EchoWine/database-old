@@ -5,7 +5,8 @@
  */
 class SchemaColumn{
 
-	public 	$name,
+	public 	$table,
+			$name,
 			$type;
 
 	public	$length = null,
@@ -27,6 +28,10 @@ class SchemaColumn{
 
 		$this -> foreign = new stdClass();
 
+	}
+
+	public function getTable(){
+		return $this -> table;
 	}
 
 	public function getName(){
@@ -69,7 +74,7 @@ class SchemaColumn{
 		$this -> index = $index;
 	}
 
-	public function setForeign(string $table,string $column){
+	public function setForeign(string $table = null,string $column = null){
 		$this -> foreignTable = $table;
 		$this -> foreignColumn = $column;
 	}
@@ -172,4 +177,12 @@ class SchemaColumn{
 
 		return $r;
 	}
+
+	public function resetForeign(){
+		$this -> setConstraint(null);
+		$this -> setForeign(null,null);
+		$this -> setForeignDelete(null);
+		$this -> setForeignUpdate(null);
+	}
+
 }

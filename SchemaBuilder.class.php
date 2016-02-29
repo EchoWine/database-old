@@ -76,51 +76,72 @@ class SchemaBuilder{
 	 */
 	public function column(string $v,string $type = null,int $length = null){
 
-		$this -> schema = new SchemaColumn(['name' => strtolower($v)]);
+		$this -> schema = new SchemaColumn(['name' => strtolower($v),'table' => $this -> getTable()]);
 
-		$tty = $type == null ? $v : $type;
-		if(!$this -> getTypeFromModel($tty,$length) && $type !== null){
-
+		if($type !== null)
 			$this -> type($type,$length);
-		}
+		
 
 		return $this;
 	}
 
-	public function getTypeFromModel($type,$length){
+	/**
+	 * Defines the column id
+	 *
+	 * @return object $this
+	 */
+	public function id(){
 
-		switch($type){
-			case 'timestamp': 
-				$this -> type('int',10);
-			break;
+		$this -> column('id','bigint',11);
+		$this -> primary();
+		$this -> auto_increment();
+		return $this;
+	}
+	
 
-			case 'md5': 
-				$this -> type('char',32);
-			break;
+	/**
+	 * Defines the column timestamp
+	 *
+	 * @param string $name
+	 * @return object $this
+	 */
+	public function timestamp($name){
+		$this -> column($name,'int',10);
+		return $this;
+	}
 
-			case 'id': 
-				$this -> type('bigint',11);
-				$this -> primary();
-				$this -> index();
-				$this -> auto_increment();
-			break;
+	/**
+	 * Defines the column md5
+	 *
+	 * @param string $name
+	 * @return object $this
+	 */
+	public function md5($name){
+		$this -> column($name,'int',10);
+		return $this;
+	}
 
-			case 'string':
-				$length == null 
-					? $this -> type('varchar',80) 
-					: $this -> type('varchar',$length);
-			break;
+	/**
+	 * Defines the column string
+	 *
+	 * @param string $name
+	 * @param string $length
+	 * @return object $this
+	 */
+	public function string($name,$length = 80){
+		$this -> column($name,'varchar',$length);
+		return $this;
+	}
 
-			case 'f_id': 
-				$this -> type('bigint',11);
-			break;
-			default: 
-				return false;
-			break;
-		}
-
-		return true;
-
+	/**
+	 * Defines the column string
+	 *
+	 * @param string $name
+	 * @return object $this
+	 */
+	public function bigint($name){
+		$this -> column($name,'bigint',11);
+		return $this;
 	}
 
 	/**
@@ -148,7 +169,6 @@ class SchemaBuilder{
 		
 
 		$this -> schema -> setPrimary(true);
-		$this -> index();
 		return $this;
 	}
 
@@ -228,6 +248,7 @@ class SchemaBuilder{
 	public function alter(){
 		if(!DB::getAlterSchema()) return;
 
+		$new = false;
 
 		# Check if table doesn't exists
 		if(!Schema::hasTable($this -> getTable())){
@@ -237,7 +258,8 @@ class SchemaBuilder{
 
 			# Update table schema
 			Schema::addTable($this -> getTable());
-			Schema::getTable($this -> getTable()) -> addColumn($this -> schema);
+			Schema::getTable($this -> getTable()) -> addColumn(clone $this -> schema);
+			$new = true;
 		}
 
 
@@ -247,11 +269,19 @@ class SchemaBuilder{
 			$this -> query($this -> SQL_addColumn());
 
 			# Update Schema
-			Schema::getTable($this -> getTable()) -> addColumn($this -> schema);
+			Schema::getTable($this -> getTable()) -> addColumn(clone $this -> schema);
+
+			$new = true;
 		}
 
 		# Actual schema
 		$a = Schema::getTable($this -> getTable()) -> getColumn($this -> schema -> getName());
+
+		if($new){
+			$a -> setIndex(false);
+			$a -> setForeign('','');
+		}
+
 
 		# New schema
 		$n = $this -> schema;
@@ -259,6 +289,13 @@ class SchemaBuilder{
 		# Update schema
 		self::$tables[$this -> getTable()] -> setColumn($n);
 
+		/*
+		print_r("DB:");
+		print_r($a);
+		print_r("PHP:");
+		print_r($n);
+		*/
+		
 
 		# Check if there is any difference between actual schema and new
 		if(!$n -> equals($a)){
@@ -279,29 +316,58 @@ class SchemaBuilder{
 				Schema::getTable($this -> getTable()) -> dropPrimary();
 			}
 
-			
 
 			# Update foreign column
-			if(!$n -> equalsForeign($a) && $a -> getForeign())
+			if(!$n -> equalsForeign($a) && $a -> getForeign()){
 				$this -> query("ALTER TABLE {$this -> table} DROP FOREIGN KEY {$a -> getConstraint()}");
 
+				# Update Schema actual
+				$a -> setConstraint(null);
+				$a -> setForeign(null,null);
+				$a -> setForeignDelete(null);
+				$a -> setForeignUpdate(null);
+			}
+
 			
-			if($n -> getForeign())
+			if($n -> getForeign()){
 				$this -> query($this -> SQL_addColumnKey('foreign'));
+
+				# Get new name of constraint
+				$constraint = DB::fetch("select CONSTRAINT_NAME from information_schema.key_column_usage WHERE CONSTRAINT_SCHEMA = '".DB::getName()."' AND TABLE_NAME = '{$this -> getTable()}' AND COLUMN_NAME = '{$a -> getName()}'")[0]['CONSTRAINT_NAME'];
+
+				# Update Schema actual
+				$a -> setConstraint($constraint);
+				$a -> setForeign($this -> schema -> getForeignTable(),$this -> schema -> getForeignColumn());
+				$a -> setForeignDelete($this -> SQL_columnKeyForeinDelete());
+				$a -> setForeignUpdate($this -> SQL_columnKeyForeinDelete());
+			}
 			
 
 			# Update index column
-			if($a -> getIndex() && !$n -> getIndex())
+			if($a -> getIndex() && !$n -> getIndex()){
 				$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getName()}");
 
-			if(!$a -> getIndex() && $n -> getIndex())
+				# Update Schema actual
+				$a -> setIndex(false);
+			}
+
+			if(!$a -> getIndex() && $n -> getIndex()){
 				$this -> query($this -> SQL_addColumnKey('index'));
 
+				# Update Schema actual
+				$a -> setIndex(true);
+			}
+
+
+		}
+
+		if(!$n -> equals($a)){
 
 			# Update column
 			$this -> query($this -> SQL_editColumn());
 
-			Schema::getTable($this -> getTable()) -> setColumn($n);
+			# Update Schema actual
+			Schema::getTable($this -> getTable()) -> setColumn(clone $n);
 
 			return true;
 		}
@@ -317,11 +383,78 @@ class SchemaBuilder{
 	 * @return result query
 	 */
 	public function drop(){
-		return $this -> query($this -> SQL_dropTable());
+		if(isset(Schema::$tables[$this -> getTable()])){
+
+			foreach(Schema::getAllForeignKeyTo($this -> getTable()) as $k){
+				DB::schema($k -> getTable()) -> dropForeignKey($k -> getName());
+			}
+
+			unset(Schema::$tables[$this -> getTable()]);
+			unset(self::$tables[$this -> getTable()]);
+
+			return $this -> query($this -> SQL_dropTable());
+		}
+	}
+
+	/**
+	 * Drop the column
+	 *
+	 * @return result query
+	 */
+	public function dropColumn($column){
+
+
+		if(($table = Schema::getTable($this -> getTable())) == null)return;
+		$c = $table -> getColumn($column);
+
+		if($c == null)return;
+
+		if($c -> getForeign()){
+
+			$this -> query($this -> SQL_dropForeignKey($c));
+		}
+
+		if($c -> getPrimary()){
+
+			$a = Schema::getTable($this -> getTable());
+
+			foreach(Schema::getAllForeignKeyToColumn($this -> getTable(),$c -> getName()) as $k){
+				$this -> query($this -> SQL_dropForeignKey($k));
+				self::$tables[$k -> getTable()] -> getColumn($k -> getName()) -> resetForeign($k);
+			}
+
+			DB::query($this -> SQL_resetSchemaColumn($c));
+			DB::query("ALTER TABLE {$this -> getTable()} DROP PRIMARY KEY");
+		}else if($c -> getIndex())
+			DB::query("ALTER TABLE {$this -> getTable()} DROP INDEX {$c -> getName()}");	
+		
+
+		if($table -> countColumns() == 1){
+			unset(Schema::$tables[$this -> getTable()]);
+			unset(self::$tables[$this -> getTable()]);
+			return $this -> drop();
+
+		}else{
+			Schema::$tables[$this -> getTable()] -> dropColumn($c -> getName());
+			self::$tables[$this -> getTable()] -> dropColumn($c -> getName());
+			return $this -> query($this -> SQL_dropColumn($c -> getName()));
+		}
 	}
 
 	public function SQL_dropTable(){
 		return "DROP TABLE {$this -> getTable()}";
+	}
+
+	public function SQL_dropColumn($column){
+		return "ALTER TABLE {$this -> getTable()} DROP COLUMN {$column}";
+	}
+
+	public function SQL_dropForeignKey($column){
+		return "ALTER TABLE {$column -> getTable()} DROP FOREIGN KEY {$column -> getConstraint()}";
+	}
+
+	public function SQL_resetSchemaColumn($column){
+		return "ALTER TABLE {$this -> getTable()} MODIFY {$column -> getName()} tinyint(1)";
 	}
 
 	public function SQL_createTable(){

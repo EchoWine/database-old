@@ -27,6 +27,14 @@ class SchemaTable{
 		$this -> columns[$column -> getName()] = $column;
 	}
 
+	public function dropColumn($column){
+		unset($this -> columns[$column]);
+	}
+
+	public function getColumns(){
+		return $this -> columns;
+	}
+
 	public function getColumn(string $nameColumn){
 		return $this -> hasColumn($nameColumn) ? $this -> columns[$nameColumn] : null;
 	}
@@ -73,4 +81,22 @@ class SchemaTable{
 		}
 	}
 
+	public function getForeignKeyTo($table){
+		foreach($this -> columns as $k){
+			if($k -> getForeignTable() == $table)
+				return $k;
+
+		}
+		return null;
+	}
+
+	public function getForeignKeyToColumn($table,$column){
+
+		foreach($this -> columns as $k){
+			if($k -> getForeignTable() == $table && $k -> getForeignColumn() == $column)
+				return $k;
+
+		}
+		return null;
+	}
 }

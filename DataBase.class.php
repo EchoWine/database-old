@@ -19,7 +19,7 @@ class DB{
 	/**
 	 * Log
 	 */
-	protected static $log;
+	protected static $log = [];
 
 	/**
 	 * Contains the last ID of the table and it's used for restore
@@ -35,6 +35,11 @@ class DB{
 	 * All information about schema/tables
 	 */
 	public static $schema = [];
+
+	/**
+	 * Enable/Disable log
+	 */
+	public static $enableLog = false;
 	
 	/**
 	 * Create a new connection
@@ -63,11 +68,22 @@ class DB{
 		}
 
 		self::select($cfg['database']);
-		self::iniRestore();
 		Schema::ini();
+
+		if($cfg['restore'] > 0)
+			self::iniRestore();
 
 	}
 	
+	public static function startLog(){
+		self::$enableLog = true;
+	}
+
+	public static function stopLog(){
+		self::$enableLog = false;
+	}
+
+
 	/**
 	 * Select the database
 	 *
@@ -143,6 +159,9 @@ class DB{
 		try{
 			$r = self::$con -> query($query);
 
+			if(self::$enableLog)
+				self::$log[] = "<i>".$query."</i>";
+
 		}catch(PDOException $e){
 			self::printError("<b>Query</b>: <i>$query</i><br>".$e -> getMessage());
 		}
@@ -151,7 +170,6 @@ class DB{
 			self::printError("<b>Query</b>: <i>$query</i><br>".self::$con -> errorInfo()[2]."");
 		
 		
-		self::$log[] = "<i>".$query."</i>";
 
 		return $r;
 	}
@@ -174,10 +192,14 @@ class DB{
 
 		$q = str_replace($k,$v,$query);
 
+
 		try{
 
 			$r = self::$con -> prepare($query);
 			$r -> execute($a);
+
+			if(self::$enableLog)
+				self::$log[] = "<i>".$q."</i>";
 
 		}catch(PDOException $e){
 			self::printError("<b>Query</b>: <i>$q</i><br>".$e -> getMessage());
@@ -187,7 +209,6 @@ class DB{
 			self::printError("<b>Query</b>: <i>$q</i><br>".self::$con -> errorInfo()[2]."");
 		
 
-		self::$log[] = "<i>".$q."</i>";
 		return $r;
 	}
 	
@@ -326,15 +347,12 @@ class DB{
 	private static function iniRestore(){
 
 		if(!self::$config['alter_schema'])return;
-		
-		self::query("
-			CREATE TABLE IF NOT EXISTS db_restore(
-				id BIGINT(11) auto_increment,
-				table_restore varchar(55),
-				table_from varchar(55),
-				primary key (id)
-			);
-		");
+
+		$r = DB::schema('db_restore');
+		$r -> id() -> alter();
+		$r -> string('table_restore') -> alter();
+		$r -> string('table_from') -> alter();
+
 
 		self::confirm();
 	}
@@ -418,6 +436,12 @@ class DB{
 		return false;
 	}
 
+	/**
+	 * Drop all undeclared columns
+	 */
+	public static function dropMissing(){
+		Schema::dropMissing();
+	}
 
 	/**
 	 * Copy the content of a table in another
