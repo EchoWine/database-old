@@ -42,6 +42,10 @@ class SchemaColumn{
 		return $this -> index;
 	}
 
+	public function hasIndex(){
+		return !empty($this -> index);
+	}
+
 	public function getAutoIncrement(){
 		return $this -> auto_increment;
 	}
@@ -70,7 +74,7 @@ class SchemaColumn{
 		return $this -> type;
 	}
 
-	public function setIndex(bool $index){
+	public function setIndex(String $index = null){
 		$this -> index = $index;
 	}
 

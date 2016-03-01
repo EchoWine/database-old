@@ -204,7 +204,7 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function index(){
-		$this -> schema -> setIndex(true);
+		$this -> schema -> setIndex($this -> schema -> getName());
 		return $this;
 	}
 
@@ -278,7 +278,7 @@ class SchemaBuilder{
 		$a = Schema::getTable($this -> getTable()) -> getColumn($this -> schema -> getName());
 
 		if($new){
-			$a -> setIndex(false);
+			$a -> setIndex(null);
 			$a -> setForeign('','');
 		}
 
@@ -344,18 +344,18 @@ class SchemaBuilder{
 			
 
 			# Update index column
-			if($a -> getIndex() && !$n -> getIndex()){
-				$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getName()}");
+			if($a -> hasIndex() && !$n -> hasIndex()){
+				$this -> query("ALTER TABLE {$this -> table} DROP INDEX {$a -> getIndex()}");
 
 				# Update Schema actual
-				$a -> setIndex(false);
+				$a -> setIndex(null);
 			}
 
-			if(!$a -> getIndex() && $n -> getIndex()){
+			if(!$a -> hasIndex() && $n -> hasIndex()){
 				$this -> query($this -> SQL_addColumnKey('index'));
 
 				# Update Schema actual
-				$a -> setIndex(true);
+				$a -> setIndex($a -> getName());
 			}
 
 
@@ -387,6 +387,7 @@ class SchemaBuilder{
 
 			foreach(Schema::getAllForeignKeyTo($this -> getTable()) as $k){
 				DB::schema($k -> getTable()) -> dropForeignKey($k -> getName());
+				$this -> query($this -> SQL_dropForeignKey($k));
 			}
 
 			unset(Schema::$tables[$this -> getTable()]);
@@ -425,8 +426,8 @@ class SchemaBuilder{
 
 			DB::query($this -> SQL_resetSchemaColumn($c));
 			DB::query("ALTER TABLE {$this -> getTable()} DROP PRIMARY KEY");
-		}else if($c -> getIndex())
-			DB::query("ALTER TABLE {$this -> getTable()} DROP INDEX {$c -> getName()}");	
+		}else if($c -> hasIndex())
+			DB::query("ALTER TABLE {$this -> getTable()} DROP INDEX {$c -> getIndex()}");	
 		
 
 		if($table -> countColumns() == 1){

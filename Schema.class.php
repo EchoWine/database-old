@@ -40,7 +40,8 @@ class Schema{
 			# Get index
 			foreach(DB::fetch("SHOW INDEX FROM {$table -> getName()}") as $k){
 				if(!$table -> getColumn($k['Column_name']) -> getPrimary())
-					$table -> getColumn($k['Column_name']) -> setIndex(true);
+					$table -> getColumn($k['Column_name']) -> setIndex($k['Key_name']);
+				
 			}
 
 
