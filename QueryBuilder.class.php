@@ -50,6 +50,8 @@ class QueryBuilder{
 		}
 
 
+		$this -> setLastJoinTable($v);
+
 		if(!is_array($v))$v = [$v];
 
 		$this -> builder -> table = $v;
@@ -63,6 +65,8 @@ class QueryBuilder{
 		$this -> builder -> andWhere = [];
 		$this -> builder -> orWhere = [];
 		$this -> builder -> join = [];
+		$this -> builder -> andOn = [];
+		$this -> builder -> orOn = [];
 		$this -> builder -> union = [];
 		$this -> builder -> is_table = false;
 		$this -> builder -> indexResult = "";
@@ -624,8 +628,14 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function leftJoin(string $t,string $v1 = null,string $v2 = null,string $v3 = NULL){
-		return $this -> _join('LEFT JOIN',$t,$v1,$v2,$v3);
+	public function leftJoin($table,$col1 = null,string $op_col2 = null,string $col2 = NULL){
+
+		if($op_col2 !== null){
+			$this -> on($table2_col1,$op_col2,$col2);
+			$table2_col1 = null;
+		}
+
+		return $this -> _join('LEFT JOIN',$table,$table2_col1);
 	}
 
 	/**
@@ -637,21 +647,33 @@ class QueryBuilder{
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function rightJoin(string $t,string $v1 = null,string $v2 = null,string $v3 = NULL){
-		return $this -> _join('RIGHT JOIN',$t,$v1,$v2,$v3);
+	public function rightJoin($table,$table2_col1 = null,string $op_col2 = null,string $col2 = NULL){
+
+		if($op_col2 !== null){
+			$this -> on($table2_col1,$op_col2,$col2);
+			$table2_col1 = null;
+		}
+
+		return $this -> _join('RIGHT JOIN',$table,$table2_col1);
 	}
 
 	/**
 	 * Effect a JOIN with an other table
 	 *
-	 * @param string $t name of the second table
+	 * @param string $table name of the second table
 	 * @param string $v1 name of the column of the primary table
 	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
 	 * @param string $v3 optional name of the column of the second table
 	 * @return object $this
 	 */
-	public function join(string $t,string $v1 = NULL,string $v2 = NULL,string $v3 = NULL){
-		return $this -> _join('JOIN',$t,$v1,$v2,$v3);
+	public function join($table,$table2_col1 = NULL,string $op_col2 = NULL,string $col2 = NULL){
+		
+		if($op_col2 !== null){
+			$this -> on($table2_col1,$op_col2,$col2);
+			$table2_col1 = null;
+		}
+
+		return $this -> _join('JOIN',$table,$table2_col1);
 	}
 
 	/**
@@ -659,44 +681,181 @@ class QueryBuilder{
 	 *
 	 * @param string $ACT type of JOIN
 	 * @param string $table name of the secondary table
-	 * @param string $v1 name of the column of the primary table
-	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param string $v3 optional name of the column of the second table
 	 * @return object clone of $this
 	 */
-	public function _join(string $ACT,string $table,string $v1 = null,string $v2 = Null,string $v3 = NULL){
+	public function _join(string $ACT,$table,$table_fun = null,$last = null){
 
 		$t = clone $this;
 
-		if($v1 == null && $v2 == null){
+		if($table_fun == null)
+			$last = $table_fun;
 
-			$k1 = Schema::getTable($table) -> getForeignKeyTo($this -> getBuilderTable());
-			$k2 = Schema::getTable($this -> getBuilderTable()) -> getForeignKeyTo($table);
+		$s_last = $last == null ? $t -> getLastJoinTable() : $last;
+
+		if(is_array($table)){
+
+
+			foreach($table as $tab_n => $tab_val){
+				$t = $t -> _join($ACT,is_int($tab_n) ? $tab_val : $tab_n,is_int($tab_n) ? null : $tab_val,$s_last);
+			}
+
+			return $t;
+		}
+
+		$and = [];
+		$or = [];
+		if(is_object($table_fun) && ($table_fun instanceof Closure)){
+			$n = DB::table($t -> getBuilderTable());
+			$n -> builder -> prepare = $t -> builder -> prepare;
+			$n -> builder -> orOn = $t -> builder -> orOn;
+			$n -> builder -> andOn = $t -> builder -> andOn;
+			$n = $table_fun($n);
+			$t -> builder -> orOn = $n -> builder -> orOn;
+			$t -> builder -> andOn = $n -> builder -> andOn;
+			$t -> builder -> prepare = $n -> builder -> prepare;
+
+			$and = $n -> builder -> andWhere;
+			$or = $n -> builder -> orWhere;
+			if($last == null)$last = $table;
+
+		}else if(!Schema::hasTable($table)){
+			die("Schema: $table doesn't exists");
+		}
+
+		if(empty($t -> builder -> orOn) && empty($t -> builder -> andOn)){
+
+			$k1 = Schema::getTable($table) -> getForeignKeyTo($s_last);
+			$k2 = Schema::getTable($s_last) -> getForeignKeyTo($table);
+
+
 			if($k1 !== null)
 				$k = $k1;
 			else if($k2 !== null)
 				$k = $k2;
-			else
-				die("Error with foreign key");
+			else{
+				die("<br>\nCannot relate $last with $table: Error with foreign key\n<br>");
+			}
 			
 			$c1 = $k -> getForeignTable().".".$k -> getForeignColumn();
 			$c2 = $k -> getTable().".".$k -> getName();
-			$op = '=';
 
-		}else if(isset($v3)){
-			$c1 = $v1;
-			$op = $v2;
-			$c2 = $v3;
-		}else{
-			$c1 = $v1;
-			$op = " = ";
-			$c2 = $v2;
+			$t = $t -> on($c1,'=',$c2);
+
+			$last = $k -> getTable();
+
 		}
 
-		$t -> builder -> join[] = "{$ACT} {$table} ON {$c1} {$op} {$c2}";
+		$t -> setLastJoinTable($last);
+
+		$t -> builder -> join[] = "{$ACT} {$table} ON ".$t -> getOnSQL($and,$or)."";
+
+		$t -> builder -> andOn = [];
+		$t -> builder -> orOn = [];
 
 		return $t;
 
+	}
+
+	public function getOnSQL($and = [],$or = []){
+
+		$a_and = [];
+		$a_or = [];
+
+		if(!empty($this -> builder -> andOn))
+			$a_and[] = $this -> getOnPartSQL($this -> builder -> andOn,'AND');
+
+		if(!empty($and))
+			$a_and[] = '('.implode($and," AND ").')';
+
+		if(!empty($this -> builder -> orOn))
+			$a_or[] = $this -> getOnPartSQL($this -> builder -> orOn,'OR');
+
+		if(!empty($or))
+			$a_or[] = '('.implode($or," OR ").')';
+
+		$s = [];
+		if(!empty($a_or))
+			$s[] = implode($a_or,' OR ');
+
+		if(!empty($a_and))
+			$s[] = implode($a_and,' AND ');
+
+
+		return implode($s," AND ");
+	}
+
+
+	public function getOnPartSQL($on,$op){
+		$s = [];
+
+		foreach($on as $k)
+			$s[] = is_array($k) ? "(".$this -> getOnPartSQL($k,$op).")" : $k -> col1.$k -> op.$k -> col2;
+		
+
+		return implode($s," $op ");
+		
+	}
+
+	/**
+	 * Add a condition ON JOIN
+	 *
+	 */
+	public function on($col1_fun,string $op_col2 = null,string $col2 = null){
+
+		if(($c = $this -> onFun($col1_fun,"AND")) != null)
+			return $c;
+
+		return $this -> _on($col1_fun,$col2 != null ? $op_col2 : '=',$col2 == null ? $op_col2 : $col2);
+	}
+
+	public function onFun($fun,$op){
+
+		if(is_object($fun) && ($fun instanceof Closure)){
+			$t = clone $this;
+			$n = DB::table($t -> getBuilderTable());
+			$n -> builder -> prepare = $t -> builder -> prepare;
+			$n = $fun($n);
+
+			$m = array_merge($n -> builder -> orOn,$n -> builder -> andOn);
+
+			switch($op){
+				case 'AND': $t -> builder -> andOn[] = $m; break;
+				case 'OR': $t -> builder -> orOn[] = $m; break;
+			}
+			
+			$t -> builder -> prepare = $n -> builder -> prepare;
+
+			return $t;
+		}
+
+		return null;
+	}
+
+	public function orOn($col1_fun,string $op_col2 = null,string $col2 = null){
+		if(($c = $this -> onFun($col1_fun,"OR")) != null)
+			return $c;
+
+		return $this -> _on($col1_fun,$col2 != null ? $op_col2 : '=',$col2 == null ? $op_col2 : $col2,'OR');
+	}
+
+	public function _on(string $col1,string $op,string $col2,$type = 'AND'){
+		$t = clone $this;
+		$o = (object)['col1' => $col1,'op' => $op,'col2' => $col2];
+
+		switch($type){
+			case 'AND': $t -> builder -> andOn[] = $o; break;
+			case 'OR': $t -> builder -> orOn[] = $o; break;
+		}
+
+		return $t;
+	}
+	
+	public function getLastJoinTable(){
+		return $this -> builder -> lastJoinTable;
+	}
+
+	public function setLastJoinTable($table){
+		$this -> builder -> lastJoinTable = $table;
 	}
 
 	/**
@@ -740,70 +899,54 @@ class QueryBuilder{
 	/**
 	 * Execute the query and insert a record
 	 *
-	 * @param array $a array of elements to insert (name column => value column)
+	 * @param array $data array of elements to insert (name column => value column)
 	 * @param bool $ignore ignore the duplicates(true) or reproduce an error(false)
 	 * @return int last id insert
 	 */
-	public function insert(array $a,bool $ignore = false){
+	public function insert($data,bool $ignore = false){
 
-		if(empty($a))return 0;
-		$t = clone $this;
-
-		$kf = array();
-		$vk = array();
-		foreach($a as $k => $v){
-			$kf[] = $k;
-			$vk[] = $t -> setPrepare($v);
-		}
-
-		$ignore = $ignore ? ' IGNORE ' : '';
-		return $t -> query("
-			INSERT {$ignore} INTO {$this -> getBuilderTable()} 
-			(".implode($kf,",").") 
-			VALUES (".implode($vk,",").") 
-		");
-	}
-
-	/**
-	 * Execute the query and insert at least a record
-	 *
-	 * @param array $nv array made from the names of the column to insert
-	 * @param array $av array made from an array of values for each row
-	 * @param bool $ignore ignore the duplicates(true) or reproduce an error(false)
-	 * @return int last ID insert
-	 */
-	public function insertMultiple(array $nv,array $av,bool $ignore = false){
-		
-		if(empty($av) || empty($nv))return 0;
+		if(empty($data))return 0;
 
 		$t = clone $this;
-		$vkk = array();
 
-		if(is_object($av) && ($av instanceof Closure)){
-			$c = $av();
+		if(is_object($data) && ($data instanceof Closure)){
+			$c = $data();
 			$t -> builder -> prepare = array_merge($t -> builder -> prepare,$c -> builder -> prepare);
-			$vkk = "(".$c -> getUnionSQL().")";
+			$values = "(".$c -> getUnionSQL().")";
+		
+			$columns = empty($c -> builder -> select) ? '' : "(".implode($c -> builder -> select,",").")";
 
 		}else{
-			foreach($av as $k){
-				$vk = array();
-				foreach($k as $v){
-					$vk[] = $t -> setPrepare($v);
-				}
-				$vkk[] = "(".implode($vk,",").")";
+
+			if(!isset($data[0]))$data = [$data];
+
+			$values = [];
+
+			foreach($data as $k){
+				$value = [];
+
+				foreach($k as $v)
+					$value[] = $t -> setPrepare($v);
+				
+				$values[] = "(".implode($value,",").")";
 			}
-			$vkk = "VALUES ".implode($vkk,",");
+
+			$values = "VALUES ".implode($values,",");
+			$columns = "(".implode(array_keys($data[0]),",").")";
 		}
 
-		$nv = "(".implode($nv,",").")";
 
 		$ignore = $ignore ? ' IGNORE ' : '';
 		
-		return DB::count($t -> query("
+		$q = DB::count($t -> query("
 			INSERT {$ignore} INTO {$this -> getBuilderTable()} 
-			$nv
-			$vkk
+			$columns
+			$values
 		"));
+
+		# Get all ID from last Insert
+		# Granted with InnoDB
+		return range($i = DB::getInsertID(), $i + $q - 1);
 	}
 
 	/**
@@ -1030,9 +1173,13 @@ class QueryBuilder{
 	 * @return result query
 	 */
 	public function truncate(){
+		return $this -> delete() && $this -> resetAutoIncrement();
+		/*
+		Problem with foreign key
 		return $this -> query("
 			TRUNCATE {$this -> getBuilderTable()} 
 		");
+		*/
 	}
 
 }

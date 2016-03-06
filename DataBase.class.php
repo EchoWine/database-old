@@ -188,7 +188,7 @@ class DB{
 		$k = array_keys($r);
 		$v = array_values($r);
 		foreach($v as &$e)
-			$e = "'{$e}'";
+			if(is_string($e))$e = "'{$e}'";
 
 		$q = str_replace($k,$v,$query);
 

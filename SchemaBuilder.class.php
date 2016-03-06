@@ -223,6 +223,17 @@ class SchemaBuilder{
 	}
 
 	/**
+	 * Makes the column nullable
+	 *
+	 * @return object $this
+	 */
+	public function null(){
+		$this -> schema -> setNull(true);
+		return $this;
+	}
+
+
+	/**
 	 * Add a SQL code everytime there is a delete
 	 *
 	 * @param string $c SQL code
