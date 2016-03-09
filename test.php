@@ -31,9 +31,15 @@
 
 	// $q = DB::table('tab1') -> join('tab2') -> get();
 
-	DB::startLog();
 
-	DB::schema('tab1') -> id() -> alter();
+	DB::schema('tab1',function($tab){
+		$tab -> id();
+		$tab -> string('name') -> unique();
+		$tab -> string('foo') -> null();
+
+	});
+
+	DB::schema('tab1') -> id();
 	DB::schema('tab1') -> string('name') -> unique() -> alter();
 	DB::schema('tab1') -> string('foo') -> null() -> alter();
 
@@ -49,6 +55,7 @@
  	DB::schema('tab3_tab2') -> bigint('tab2_id') -> foreign('tab2','id') -> alter();
  	DB::schema('tab3_tab2') -> bigint('taxi') -> alter();
 
+	DB::startLog();
  	$tab1_id = DB::table('tab1') -> insert([
 		['name' => 5,'foo' => 'bar'],
 		['name' => 10,'foo' => null],
@@ -57,14 +64,17 @@
  	
  	$tab2_id = DB::table('tab2') -> insert(['tab1_id' => $tab1_id[0]]);
  	$tab3_id = DB::table('tab3') -> insert(['tab1_id' => $tab1_id[1],'username' => 'foo']);
- 	DB::table('tab3_tab2') -> insert(['tab2_id' => $tab2_id[0],'tab3_id' => $tab2_id[0],'taxi' => 5]);
+ 	DB::table('tab3_tab2') -> insert(['tab2_id' => $tab2_id[0],'tab3_id' => $tab3_id[0],'taxi' => 5]);
 
 
  	DB::table('tab1') -> insert(['name' => 100]);
 
 
+ 	/* --------------------------------------
 
- 	# Queste 3 query producono lo stesso risultato
+ 			JOIN
+
+	--------------------------------------- */
 
  	DB::table('tab2') -> join('tab3_tab2','tab3_tab2.tab2_id','=','tab2.id') -> join('tab3','tab3_tab2.tab3_id','=','tab3.id') -> get();
 
@@ -113,6 +123,9 @@
 
  	}) -> join('tab3') -> get();
 
+
+
+
  	
  
  	/*
@@ -121,10 +134,6 @@
  	});
  	*/
 
- 	// DB::table('tab1') -> truncate();
- 	DB::table('tab3_tab2') -> truncate();
- 	DB::table('tab2') -> truncate();
- 	DB::table('tab3') -> truncate();
 	
 	//DB::schema('tab1') -> drop();
 	//DB::schema('tab3') -> drop();

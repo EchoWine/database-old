@@ -314,26 +314,6 @@ class DB{
 		return Schema::hasTable($v);
 	}
 
-	/**
-	 * Create a new object QueryBuilder
-	 *
-	 * @param string|array|closure $table
-	 * @return object QueryBuilder object
-	 */
-	public static function table($table){
-		return new QueryBuilder($table);
-	}
-
-	/**
-	 * Create a new object SchemaBuilder
-	 *
-	 * @param string $table
-	 * @return object SchemaBuilder object
-	 */
-	public static function schema($table){
-		return new SchemaBuilder($table);
-	}
-
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// 
@@ -455,5 +435,33 @@ class DB{
 		return self::query("TRUNCATE table {$t1}") && 
 		self::query("INSERT {$t1} SELECT * FROM {$t2}");
 	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// 
+	//		Builders
+	// 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	/**
+	 * Create a new object QueryBuilder
+	 *
+	 * @param string|array|closure $table
+	 * @return object QueryBuilder object
+	 */
+	public static function table($table){
+		return new QueryBuilder($table);
+	}
+
+	/**
+	 * Create a new object SchemaBuilder
+	 *
+	 * @param string $table
+	 * @param closure $columns
+	 * @return object SchemaBuilder object
+	 */
+	public static function schema($table,$columns = null){
+		return new SchemaBuilder($table,$columns);
+	}
+
 }
 ?>

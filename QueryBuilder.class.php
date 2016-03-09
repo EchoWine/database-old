@@ -6,16 +6,6 @@
 class QueryBuilder{
 
 	/**
-	 * Counter of all istance of this class
-	 */
-	public static $counter = 0;
-
-	/**
-	 * Count of actual istance
-	 */
-	public $count;
-
-	/**
 	 * Infomation about the creation of the query
 	 */
 	public $builder;
@@ -25,10 +15,6 @@ class QueryBuilder{
 	 */
 	public $schema;
 
-	/**
-	 * List of all the alias made automatically for the nested selection query
-	 */
-	public static $tableAs = array();
 
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
@@ -36,71 +22,33 @@ class QueryBuilder{
 	 * @param string|array|closure $v
 	 * @return string name alias of the table
 	 */
-	public function __construct($v){
+	public function __construct($table,$alias = null){
 
-		$this -> builder = new stdClass();
-		$this -> builder -> prepare = array();
+		$this -> builder = new Builder();
 
-		/* Controllo che si tratti di una select annidata */
-		if($v instanceof Closure){
-			$t = $v();
-			$as = self::getTableAs();
-			$v = "(".$t -> getUnionSQL().") as $as";
-			$this -> builder -> prepare = $t -> builder -> prepare;
+		/* Annidate table */
+		if($table instanceof Closure){
+			$table = $table();
+
+			if($alias !== null)
+				$alias = self::getTableAs();
+
+			// Jesk
+			// $v = "(".$table -> getUnionSQL().") as $as";
+
+			$this -> builder -> setPrepare($t -> builder -> getPrepare());
 		}
 
-
-		$this -> setLastJoinTable($v);
-
-		if(!is_array($v))$v = [$v];
-
-		$this -> builder -> table = $v;
-		$this -> builder -> agg = [];
-		$this -> builder -> select = [];
-		$this -> builder -> update = [];
-		$this -> builder -> orderby = array();[];
-		$this -> builder -> skip = NULL;
-		$this -> builder -> take = NULL;
-		$this -> builder -> groupBy = [];
-		$this -> builder -> andWhere = [];
-		$this -> builder -> orWhere = [];
-		$this -> builder -> join = [];
-		$this -> builder -> andOn = [];
-		$this -> builder -> orOn = [];
-		$this -> builder -> union = [];
-		$this -> builder -> is_table = false;
-		$this -> builder -> indexResult = "";
-		$this -> builder -> tmp_prepare = [];
-
-		$this -> setCounter();
+		$this -> builder -> addTable($table,$alias);
 
 		return $this;
 	}
 	
 	/**
-	 * Increment the counter
-	 */
-	public function setCounter(){
-		$this -> count = self::$counter++;
-	}
-
-	/**
-	 * Return a random name (unused) to use as alias for the query
-	 *
-	 * @return string alias name of the table
-	 */
-	public static function getTableAs(){
-		$c = "t".count(self::$tableAs);
-		self::$tableAs[] = $c;
-		return $c;
-	}
-
-	/**
 	 * Clone  the attribute builder
 	 */
 	public function __clone(){
 		$this -> builder = clone $this -> builder;
-		$this -> setCounter();
 	}
 
 	/**
@@ -111,7 +59,7 @@ class QueryBuilder{
 	 * @return object result of the query
 	 */
 	public function query(string $q,array $p = NULL){
-		if($p == null)$p = $this -> builder -> prepare;
+		if($p == null)$p = $this -> builder -> getPrepare();
 
 		return empty($p) ? DB::query($q) : DB::execute($q,$p);
 		
@@ -135,8 +83,8 @@ class QueryBuilder{
 	 * @return string name of the value
 	 */
 	public function setPrepare($v){
-		$l = ":p".$this -> count."_".count($this -> builder -> prepare);
-		$this -> builder -> prepare[$l] = $v;
+		$l = ":p".$this -> builder -> getCount()."_".count($this -> builder -> getPrepare());
+		$this -> builder -> addPrepare($l,$v);
 		return $l;
 	}
 
@@ -226,7 +174,7 @@ class QueryBuilder{
 	 */
 	public function selectFunction(string $v,string $f){
 		$c = clone $this;
-		$c -> builder -> select[] = "{$f}({$v})";
+		$c -> builder -> addSelect("{$f}({$v})");
 		$r = $c -> get();
 
 		return isset($r["{$f}({$v})"]) ? $r["{$f}({$v})"] : 0;
@@ -239,7 +187,7 @@ class QueryBuilder{
 	 * @param string $v name of the column
 	 * @return object $this
 	 */
-	public function orderByAsc(string $c){
+	public function orderBy(string $c){
 		$this -> builder -> orderby[] = "$c ASC";
 		return $this;
 	}
@@ -403,16 +351,7 @@ class QueryBuilder{
 		}else{
 
 			// Ottengo automaticamente la chiave primaria
-			$col = "(SELECT k.column_name
-				FROM information_schema.table_constraints t
-				JOIN information_schema.key_column_usage k
-				USING(constraint_name,table_schema,table_name)
-				WHERE t.constraint_type='PRIMARY KEY'
-					AND t.constraint_schema='".DB::getName()."'
-					AND t.table_name='{$this -> getBuilderTable()}')
-
-			";
-
+			$col = Schema::getTable($this -> getBuilderTable()) -> getPrimary() -> getName();
 			$op = '=';
 			$val = $v1;
 		}
@@ -690,7 +629,7 @@ class QueryBuilder{
 		if($table_fun == null)
 			$last = $table_fun;
 
-		$s_last = $last == null ? $t -> getLastJoinTable() : $last;
+		$s_last = $last == null ? $t -> builder -> getLastJoinTable() : $last;
 
 		if(is_array($table)){
 
@@ -745,7 +684,7 @@ class QueryBuilder{
 
 		}
 
-		$t -> setLastJoinTable($last);
+		$t -> builder -> setLastJoinTable($last);
 
 		$t -> builder -> join[] = "{$ACT} {$table} ON ".$t -> getOnSQL($and,$or)."";
 
@@ -848,14 +787,6 @@ class QueryBuilder{
 		}
 
 		return $t;
-	}
-	
-	public function getLastJoinTable(){
-		return $this -> builder -> lastJoinTable;
-	}
-
-	public function setLastJoinTable($table){
-		$this -> builder -> lastJoinTable = $table;
 	}
 
 	/**

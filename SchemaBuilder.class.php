@@ -15,18 +15,34 @@ class SchemaBuilder{
 
 	public static $tables;
 
+	public static $columns = [];
+	public static $activeClosure = false;
+
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
 	 * 
-	 * @param string $v
+	 * @param string $table
+	 * @param string $columns
 	 */
-	public function __construct($v){
+	public function __construct($table,$columns = null){
 
-		$this -> table = $v;
+		$this -> table = $table;
 
-		if(!isset(self::$tables[$v])){
-			$s = new SchemaTable($v);
-			self::$tables[$v] = $s;
+		if(!isset(self::$tables[$table])){
+			$s = new SchemaTable($table);
+			self::$tables[$table] = $s;
+		}
+
+		if($columns !== null && $columns instanceof Closure){
+			self::$activeClosure = true;
+			$columns($this);
+
+			print_r(self::$columns[$table]);
+			foreach((array)self::$columns[$table] as $column){
+				$column -> alter();
+			}
+
+			self::$activeClosure = false;
 		}
 
 		return $this;
@@ -76,13 +92,24 @@ class SchemaBuilder{
 	 */
 	public function column(string $v,string $type = null,int $length = null){
 
+		$this -> updateThis();
+
 		$this -> schema = new SchemaColumn(['name' => strtolower($v),'table' => $this -> getTable()]);
+		
 
 		if($type !== null)
 			$this -> type($type,$length);
 		
 
 		return $this;
+	}
+
+	/**
+	 * Update this to all columns
+	 */
+	public function updateThis(){
+		if($this -> schema != null)
+			self::$columns[$this -> getTable()][$this -> schema -> getName()] = clone $this;
 	}
 
 	/**
