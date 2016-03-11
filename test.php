@@ -32,16 +32,14 @@
 	// $q = DB::table('tab1') -> join('tab2') -> get();
 
 
+
+	DB::startLog();
+
 	DB::schema('tab1',function($tab){
 		$tab -> id();
 		$tab -> string('name') -> unique();
-		$tab -> string('foo') -> null();
-
+		$tab -> string('foo') -> unique() -> null();
 	});
-
-	DB::schema('tab1') -> id();
-	DB::schema('tab1') -> string('name') -> unique() -> alter();
-	DB::schema('tab1') -> string('foo') -> null() -> alter();
 
 
 	DB::schema('tab2') -> id() -> alter();
@@ -55,7 +53,6 @@
  	DB::schema('tab3_tab2') -> bigint('tab2_id') -> foreign('tab2','id') -> alter();
  	DB::schema('tab3_tab2') -> bigint('taxi') -> alter();
 
-	DB::startLog();
  	$tab1_id = DB::table('tab1') -> insert([
 		['name' => 5,'foo' => 'bar'],
 		['name' => 10,'foo' => null],
@@ -134,9 +131,6 @@
  	});
  	*/
 
-	
-	//DB::schema('tab1') -> drop();
-	//DB::schema('tab3') -> drop();
 
 	/*
 	DB::schema('tab3') -> dropColumn('username');

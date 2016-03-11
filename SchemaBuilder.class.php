@@ -36,8 +36,6 @@ class SchemaBuilder{
 		if($columns !== null && $columns instanceof Closure){
 			self::$activeClosure = true;
 			$columns($this);
-
-			print_r(self::$columns[$table]);
 			foreach((array)self::$columns[$table] as $column){
 				$column -> alter();
 			}
@@ -92,7 +90,6 @@ class SchemaBuilder{
 	 */
 	public function column(string $v,string $type = null,int $length = null){
 
-		$this -> updateThis();
 
 		$this -> schema = new SchemaColumn(['name' => strtolower($v),'table' => $this -> getTable()]);
 		
@@ -101,15 +98,14 @@ class SchemaBuilder{
 			$this -> type($type,$length);
 		
 
-		return $this;
+		return $this -> updateThis();
 	}
 
 	/**
 	 * Update this to all columns
 	 */
 	public function updateThis(){
-		if($this -> schema != null)
-			self::$columns[$this -> getTable()][$this -> schema -> getName()] = clone $this;
+		return self::$columns[$this -> getTable()][$this -> schema -> getName()] = clone $this;
 	}
 
 	/**
@@ -424,8 +420,9 @@ class SchemaBuilder{
 		if(isset(Schema::$tables[$this -> getTable()])){
 
 			foreach(Schema::getAllForeignKeyTo($this -> getTable()) as $k){
-				DB::schema($k -> getTable()) -> dropForeignKey($k -> getName());
 				$this -> query($this -> SQL_dropForeignKey($k));
+				Schema::getTable($k -> getTable()) -> getColumn($k -> getName()) -> resetForeign();
+				self::$tables[$k -> getTable()] -> getColumn($k -> getName()) -> resetForeign();
 			}
 
 			unset(Schema::$tables[$this -> getTable()]);
