@@ -5,18 +5,23 @@
  */
 class Schema{
 
-
+	/**
+	 * List of all table
+	 */
 	public static $tables = [];
 
+	/**
+	 * Initialization
+	 */
 	public static function ini(){		
 
 		# Get info about all tables
-		foreach(DB::fetch("SHOW TABLES") as $k){
+		foreach(DB::fetch(DB::SQL()::SHOW_TABLES()) as $k){
 
 			$table = new SchemaTable($k[0]);
 			
 			# Get columns
-			foreach(DB::fetch("describe {$table -> getName()}") as $k){
+			foreach(DB::fetch(DB::SQL()::SHOW_TABLE($table -> getName())) as $k){
 				
 				preg_match('/\((.*)\)/',$k['Type'],$length);
 				$type = preg_replace('/\((.*)\)/','',$k['Type']);
@@ -38,14 +43,14 @@ class Schema{
 			}
 
 			# Get index
-			foreach(DB::fetch("SHOW INDEX FROM {$table -> getName()}") as $k){
+			foreach(DB::fetch(DB::SQL()::SHOW_INDEX($table -> getName())) as $k){
 				if(!$table -> getColumn($k['Column_name']) -> getPrimary())
 					$table -> getColumn($k['Column_name']) -> setIndex($k['Key_name']);
 				
 			}
 
 
-			foreach(DB::fetch("select TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME from information_schema.key_column_usage WHERE CONSTRAINT_SCHEMA = '".DB::getName()."' AND TABLE_NAME = '{$table -> getName()}' AND REFERENCED_TABLE_NAME IS NOT NULL") as $k){
+			foreach(DB::fetch(DB::SQL()::SHOW_CONSTRAINT(DB::getName(),$table -> getName())) as $k){
 
 				$c = $table -> getColumn($k['COLUMN_NAME']);
 
@@ -59,6 +64,9 @@ class Schema{
 
 	}
 
+	/**
+	 * Drop all the table/column that aren't defined
+	 */
 	public static function dropMissing(){
 		foreach(self::$tables as $n => $k){
 			if(!isset(SchemaBuilder::$tables[$n]))
@@ -80,53 +88,85 @@ class Schema{
 		}
 	}
 
-	public static function hasTable($table){
-		return isset(self::$tables[$table]);
+	/**
+	 * @param string $tableName
+	 * @return bool exists table
+	 */
+	public static function hasTable($tableName){
+		return isset(self::$tables[$tableName]);
 	}
 
-	public static function tableHasColumn($table,$column){
-		return self::$tables[$table] -> hasColumn($column);
+	/**
+	 * @param string $tableName
+	 * @param string $columName
+	 * @return bool exists column
+	 */
+	public static function tableHasColumn($tableName,$columnName){
+		return self::$tables[$tableName] -> hasColumn($columnName);
 	}
 
+	/**
+	 * @return bool cont all columns
+	 */
 	public static function tableCountColumns($table,$column){
 		return self::hasTable($table) ? self::$table[$table] -> countColumns() : 0;
 	}
 
-
-
+	/**
+	 * @return SchemaTable[] array 
+	 */
 	public static function getTables(){
 		return self::$tables;
 	}
 
-	public static function getTable($table){
-		return isset(self::$tables[$table]) ? self::$tables[$table] : null;
+	/**
+	 * @param string $tableName
+	 * @return SchemaTable table
+	 */
+	public static function getTable($tableName){
+		return isset(self::$tables[$tableName]) ? self::$tables[$tableName] : null;
 	}
 
-	public static function addTable($table,$columns = []){
-		$table = new SchemaTable($table,$columns);
+	/**
+	 * Add a table
+	 * 
+	 * @param string $tableName
+	 * @param array $columns
+	 */
+	public static function addTable($tableName,$columns = []){
+		$table = new SchemaTable($tableName,$columns);
 		self::$tables[$table -> getName()] = $table;
 	}
 
-	public static function getAllForeignKeyTo($table){
+	/**
+	 * Get all columns that have a foreign key related to the table 
+	 * 
+	 * @param string $tableName
+	 */
+	public static function getAllForeignKeyTo($tableName){
 		$r = [];
 		foreach(self::$tables as $n => $k){
-			$c = $k -> getForeignKeyTo($table);
+			$c = $k -> getForeignKeyTo($tableName);
 			if($c !== null)$r[] = $c;
 		}
 
 		return $r;
 	}
 
-	public static function getAllForeignKeyToColumn($table,$column){
+	/**
+	 * Get all columns that have a foreign key related to the table and column 
+	 * 
+	 * @param string $tableName
+	 * @param string $columnName
+	 */
+	public static function getAllForeignKeyToColumn($tableName,$columnName){
 		$r = [];
 		foreach(self::$tables as $n => $k){
-			$c = $k -> getForeignKeyToColumn($table,$column);
+			$c = $k -> getForeignKeyToColumn($tableName,$columnName);
 			if($c !== null)$r[] = $c;
 		}
 
 		return $r;
 	}
-
-
 
 }

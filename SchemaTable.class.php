@@ -25,7 +25,6 @@ class SchemaTable{
 
 		$this -> name = $name;
 		$this -> columns = $columns;
-
 	}	
 
 	/**

@@ -7,5 +7,7 @@
 	include dirname(__FILE__).'/SchemaBuilder.class.php';
 	include dirname(__FILE__).'/Builder.class.php';
 	include dirname(__FILE__).'/QueryBuilder.class.php';
+	include dirname(__FILE__).'/SQL.class.php';
+	include dirname(__FILE__).'/MYSQL.class.php';
 
 ?>

@@ -40,6 +40,11 @@ class DB{
 	 * Enable/Disable log
 	 */
 	public static $enableLog = false;
+
+	/**
+	 * SQL
+	 */
+	public static $sql;
 	
 	/**
 	 * Create a new connection
@@ -68,21 +73,39 @@ class DB{
 		}
 
 		self::select($cfg['database']);
+
+		switch($cfg['driver']){
+			case 'mysql': self::$sql = 'MYSQL'; break;
+		}
+
 		Schema::ini();
 
 		if($cfg['restore'] > 0)
 			self::iniRestore();
 
+
 	}
 	
+	/**
+	 * @return SQL
+	 */
+	public static function SQL(){
+		return self::$sql;
+	}
+	
+	/**
+	 * Start log
+	 */
 	public static function startLog(){
 		self::$enableLog = true;
 	}
 
+	/**
+	 * End log
+	 */
 	public static function stopLog(){
 		self::$enableLog = false;
 	}
-
 
 	/**
 	 * Select the database
@@ -302,18 +325,6 @@ class DB{
 
 		}
 	}
-
-
-	/**
-	 * Check if a table exists
-	 *
-	 * @param string $v name of the table
-	 * @return bool return if the table exists (true) or not (false)
-	 */
-	public static function hasTable(string $v){
-		return Schema::hasTable($v);
-	}
-
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// 
