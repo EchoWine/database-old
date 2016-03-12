@@ -494,7 +494,7 @@ class SchemaBuilder{
 	}
 
 	public function SQL_editColumn(){
-		return DB::SQL()::EDIT_COLUMN($this -> getTable(),$this -> SQL_column());
+		return DB::SQL()::EDIT_COLUMN($this -> getTable(),$this -> schema -> getName(),$this -> SQL_column());
 	}
 
 	public function SQL_editColumnBasics($table,$schema){
@@ -522,13 +522,13 @@ class SchemaBuilder{
 
 	public function SQL_column(){
 		return DB::SQL()::COLUMN(
-			$s -> getName(),
-			$s -> getType(),
-			$s -> getLength(),
-			$s -> getPrimary(),
-			$s -> getAutoIncrement(),
-			$s -> getUnique(),
-			$s -> getNull()
+			$this -> schema -> getName(),
+			$this -> schema -> getType(),
+			$this -> schema -> getLength(),
+			$this -> schema -> getPrimary(),
+			$this -> schema -> getUnique(),
+			$this -> schema -> getAutoIncrement(),
+			$this -> schema -> getNull()
 		);
 	}
 
