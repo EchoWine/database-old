@@ -248,6 +248,17 @@ class DB{
 	}
 
 	/**
+	 * Execute the query and return the first result
+	 *
+	 * @param PDOStatement|SQL code $q PDO object
+	 * @return array result
+	 */
+	public static function first($q){
+		return DB::fetch($q)[0];
+	}
+
+
+	/**
 	 * Count the results of a query
 	 *
 	 * @param PDOStatement $q PDO object
@@ -428,13 +439,6 @@ class DB{
 	}
 
 	/**
-	 * Drop all undeclared columns
-	 */
-	public static function dropMissing(){
-		Schema::dropMissing();
-	}
-
-	/**
 	 * Copy the content of a table in another
 	 *
 	 * @param string $t1 name of table to restore
@@ -445,6 +449,13 @@ class DB{
 
 		return self::query("TRUNCATE table {$t1}") && 
 		self::query("INSERT {$t1} SELECT * FROM {$t2}");
+	}
+
+	/**
+	 * Drop all undeclared columns
+	 */
+	public static function dropMissing(){
+		Schema::dropMissing();
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

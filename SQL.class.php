@@ -3,6 +3,19 @@
 
 class SQL{
 
+	const TINYINT = 'tinyint';
+	const BIGINT = 'bigint';
+	const INT = 'int';
+	const VARCHAR = 'varchar';
+	const FLOAT = 'float';
+	const DOUBLE = 'double';
+	const TEXT = 'text';
+
+
+	const INDEX = 'index';
+	const FOREIGN = 'foreign';
+
+
 	/**
 	 * @return string get all the tables
 	 */
@@ -54,4 +67,108 @@ class SQL{
 	public static function MODIFY_COLUMN_RESET($tableName,$columnName){
 		return "ALTER TABLE $tableName MODIFY $columnName tinyint(1)";
 	}
+
+	public static function DROP_PRIMARY_KEY($tableName){
+		return "ALTER TABLE $tableName DROP PRIMARY KEY";
+	}
+
+	public static function DROP_INDEX_KEY($tableName,$indexName){
+		return "ALTER TABLE $tableName DROP INDEX $indexName";
+	}
+
+	public static function ADD_INDEX_KEY($tableName,$indexName){
+		return "ALTER TABLE $tableName ADD INDEX($indexName)";
+	}
+
+	public static function ADD_FOREIGN_KEY($tableName,$constraintName,$foreignTable,$foreignColumn,$onDelete,$onUpdate){
+ 		
+ 		$onDelete =  $onDelete ? ' ON DELETE '.$onDelete : '';
+ 		$onUpdate =  $onUpdate ? ' ON UPDATE '.$onUpdate : '';
+
+		return "ALTER TABLE $tableName ADD 
+			FOREIGN KEY ($tableName) REFERENCES $foreignTable($foreignColumn)
+			$onDelete $onUpdate
+		";
+
+	}
+	public static function SELECT_CONSTRAINT($dbName,$tableName,$columnName){
+		return "
+			select CONSTRAINT_NAME 
+			from information_schema.key_column_usage 
+			WHERE CONSTRAINT_SCHEMA = '$dbName' AND TABLE_NAME = '$tableName' AND COLUMN_NAME = '$columnName'
+		";
+	}
+
+	public static function CREATE_TABLE($tableName,$columns){
+		return "CREATE TABLE IF NOT EXISTS $tableName (".explode(",".$columns).")";
+	}
+
+	public static function EDIT_COLUMN($tableName,$columnName,$column){
+		return "ALTER TABLE $tableName CHANGE COLUMN $columnName $column";
+	}
+
+	public static function ADD_COLUMN($tableName,$column){
+		return "ALTER TABLE $tableName ADD $column";
+	}
+
+	public static function COLUMN($name,$type,$length = null,$primary = false,$unique = false,$auto_increment = false,$null = false){
+
+		$unique = $unique ? 'UNIQUE' : '';
+		$primary = $primary ? 'PRIMARY KEY' : '';
+		$auto_increment = $auto_increment ? 'AUTO_INCREMENT' : '';
+		$null = $null ? 'NULL' : 'NOT NULL';
+
+		return $name." ".self::TYPE($type,$length)." ".$primary." ".$auto_increment." ".$unique." ".$null;
+	}
+
+	public static function TYPE($type,$length){
+
+		switch($type){
+
+			case self::TINYINT:
+			case self::INT:
+			case self::BIGINT:
+			case self::VARCHAR:
+			case self::FLOAT:
+			case self::DOUBLE:
+				return "$type($length)";
+
+
+			case self::TEXT:
+				return $type;
+
+		}
+
+		die('Error');
+	}
+
+
+	public function COLUMN_INDEX($type){
+		$name = $this -> schema -> getName();
+		switch($type){
+			case 'index':
+				return "INDEX ($name)";
+
+			case 'foreign':
+				return "
+					FOREIGN KEY ($name) 
+					REFERENCES {$this -> schema -> getForeignTable()}({$this -> schema -> getForeignColumn()})
+					{$this -> SQL_columnKeyForeinDelete()}
+					{$this -> SQL_columnKeyForeinUpdate()}
+			";
+
+		}
+
+		return '';
+	}
+
+	public function SQL_columnKeyForeinDelete(){
+		return $c = $this -> schema -> getForeignDelete() !== null ? ' ON DELETE '.$c : '';
+	}
+
+	public function SQL_columnKeyForeinUpdate(){
+		return $c = $this -> schema -> getForeignUpdate() !== null ? ' ON UPDATE '.$c : '';
+	}
+
+	
 }
