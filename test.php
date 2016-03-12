@@ -84,7 +84,6 @@
  	DB::table('tab2') -> join('tab3_tab2') -> join('tab3') -> get();
 
 
-
  	DB::table('tab2')
  	-> join('tab3_tab2',function($q){
  		$q = $q -> where('tab3_tab2.taxi','=',5);
@@ -100,9 +99,7 @@
  		return $q;
 
  	}) -> join('tab3') -> get();
-
  	
-
  	DB::table('tab3_tab2') -> join(['tab3' => function($q){
  		$q = $q -> where('tab3_tab2.taxi','=',5);
  		return $q;

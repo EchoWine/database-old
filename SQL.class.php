@@ -1,8 +1,10 @@
 <?php
 
-
+/**
+ * SQL
+ */
 class SQL{
-
+	
 	const TINYINT = 'tinyint';
 	const BIGINT = 'bigint';
 	const INT = 'int';

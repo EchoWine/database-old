@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Schema
+ * Schema Table
  */
 class SchemaTable{
 
