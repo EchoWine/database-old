@@ -11,12 +11,20 @@ class SchemaBuilder{
 	 */
 	public $schema;
 
+	/**
+	 * Name table
+	 */
 	public $table;
 
+	/**
+	 * <SchemaTable> Array
+	 */
 	public static $tables;
 
+	/**
+	 * <SchemaBuilder> Array
+	 */
 	public static $columns = [];
-	public static $activeClosure = false;
 
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
@@ -34,13 +42,11 @@ class SchemaBuilder{
 		}
 
 		if($columns !== null && $columns instanceof Closure){
-			self::$activeClosure = true;
 			$columns($this);
 			foreach((array)self::$columns[$table] as $column){
 				$column -> alter();
 			}
 
-			self::$activeClosure = false;
 		}
 
 		return $this;
@@ -115,12 +121,31 @@ class SchemaBuilder{
 	 */
 	public function id(){
 
-		$this -> column('id',DB::SQL()::BIGINT,11);
+		$this -> bigint('id',11);
 		$this -> primary();
 		$this -> auto_increment();
 		return $this;
 	}
-	
+		
+	/**
+	 * Defines the column int
+	 *
+	 * @param string $name
+	 * @return object $this
+	 */
+	public function int($name,$length = 11){
+		return $this -> column($name,DB::SQL()::INT,$length);
+	}
+
+	/**
+	 * Defines the column bigint
+	 *
+	 * @param string $name
+	 * @return object $this
+	 */
+	public function bigint($name,$length = 11){
+		return $this -> column($name,DB::SQL()::BIGINT,$length);
+	}
 
 	/**
 	 * Defines the column timestamp
@@ -129,8 +154,7 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function timestamp($name){
-		$this -> column($name,DB::SQL()::BIGINT,10);
-		return $this;
+		return $this -> bigint($name,10);
 	}
 
 	/**
@@ -140,8 +164,7 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function md5($name){
-		$this -> column($name,DB::SQL()::BIGINT,10);
-		return $this;
+		return $this -> varchar($name,32);
 	}
 
 	/**
@@ -152,20 +175,9 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function string($name,$length = 80){
-		$this -> column($name,DB::SQL()::VARCHAR,$length);
-		return $this;
+		return $this -> column($name,DB::SQL()::VARCHAR,$length);
 	}
 
-	/**
-	 * Defines the column string
-	 *
-	 * @param string $name
-	 * @return object $this
-	 */
-	public function bigint($name){
-		$this -> column($name,DB::SQL()::BIGINT,11);
-		return $this;
-	}
 
 	/**
 	 * Return the SQL code for the selection
@@ -192,6 +204,7 @@ class SchemaBuilder{
 		
 
 		$this -> schema -> setPrimary(true);
+		$this -> schema -> setNull(false);
 		return $this;
 	}
 
@@ -226,7 +239,16 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function index(){
-		$this -> schema -> setIndex($this -> schema -> getName());
+		$index = $this -> schema -> getName();
+
+		if(($c = Schema::getTable($this -> getTable())) !== null){
+			if(($c = $c -> getColumn($this -> schema -> getName())) !== null){
+				if($c -> getIndex() !== null)
+					$index = $c -> getIndex();
+			}
+		} 
+
+		$this -> schema -> setIndex($index);
 		return $this;
 	}
 
@@ -283,6 +305,7 @@ class SchemaBuilder{
 
 		$new = false;
 
+
 		# Check if table doesn't exists
 		if(!Schema::hasTable($this -> getTable())){
 
@@ -294,8 +317,6 @@ class SchemaBuilder{
 			Schema::getTable($this -> getTable()) -> addColumn(clone $this -> schema);
 			$new = true;
 		}
-
-
 
 		# Check if column doesn't exists
 		if(!$this -> hasColumn($this -> schema -> getName())){
@@ -315,7 +336,6 @@ class SchemaBuilder{
 			$a -> setForeign('','');
 		}
 
-
 		# New schema
 		$n = $this -> schema;
 			
@@ -329,6 +349,7 @@ class SchemaBuilder{
 		print_r($n);
 		*/
 		
+		$dropped_foreign = [];
 
 		# Check if there is any difference between actual schema and new
 		if(!$n -> equals($a)){
@@ -343,10 +364,16 @@ class SchemaBuilder{
 
 				$primary = $p !== null ? $p : $n;
 
+				foreach(Schema::getAllForeignKeyToColumn($this -> getTable(),$this -> schema -> getName()) as $k){
+					$dropped_foreign[] = $k;
+					$this -> query(DB::SQL()::DROP_FOREIGN_KEY($k -> getTable(),$k -> getConstraint()));
+				}
+
 				$this -> query($this -> SQL_editColumnBasics($this -> table,$primary));
 
 				$this -> query(DB::SQL()::DROP_PRIMARY_KEY($this -> getTable()));
 				Schema::getTable($this -> getTable()) -> dropPrimary();
+
 			}
 
 
@@ -371,8 +398,8 @@ class SchemaBuilder{
 				# Update Schema actual
 				$a -> setConstraint($constraint);
 				$a -> setForeign($this -> schema -> getForeignTable(),$this -> schema -> getForeignColumn());
-				$a -> setForeignDelete($this -> SQL_columnKeyForeinDelete());
-				$a -> setForeignUpdate($this -> SQL_columnKeyForeinDelete());
+				$a -> setForeignDelete($this -> schema -> getForeignDelete());
+				$a -> setForeignUpdate($this -> schema -> getForeignUpdate());
 			}
 			
 
@@ -395,10 +422,19 @@ class SchemaBuilder{
 
 		}
 
+		foreach($dropped_foreign as $k){
+			$this -> query($this -> SQL_addColumnForeign($k -> getTable(),$k));
+		}
+
+
 		if(!$n -> equals($a)){
 
 			# Update column
+
+			# Remove tem
+			$this -> query(DB::SQL()::DISABLE_CHECKS_FOREIGN());
 			$this -> query($this -> SQL_editColumn());
+			$this -> query(DB::SQL()::ENABLE_CHECKS_FOREIGN());
 
 			# Update Schema actual
 			Schema::getTable($this -> getTable()) -> setColumn(clone $n);
@@ -420,7 +456,7 @@ class SchemaBuilder{
 		if(isset(Schema::$tables[$this -> getTable()])){
 
 			foreach(Schema::getAllForeignKeyTo($this -> getTable()) as $k){
-				$this -> query(DB::SQL()::DROP_FOREIGN_KEY($this -> getTable(),$k -> getConstraint()));
+				$this -> query(DB::SQL()::DROP_FOREIGN_KEY($k -> getTable(),$k -> getConstraint()));
 				Schema::getTable($k -> getTable()) -> getColumn($k -> getName()) -> resetForeign();
 				self::$tables[$k -> getTable()] -> getColumn($k -> getName()) -> resetForeign();
 			}
@@ -498,7 +534,15 @@ class SchemaBuilder{
 	}
 
 	public function SQL_editColumnBasics($table,$schema){
-		return DB::SQL()::COLUMN($s -> getName(),$s -> getType(),$s -> getLength());
+		return DB::SQL()::EDIT_COLUMN(
+			$this -> getTable(),
+			$this -> schema -> getName(),
+			DB::SQL()::COLUMN(
+				$this -> schema -> getName(),
+				$this -> schema -> getType(),
+				$this -> schema -> getLength()
+			)
+		);
 	}
 	
 	public function SQL_addColumnIndex(){
@@ -509,10 +553,23 @@ class SchemaBuilder{
 		return DB::SQL()::ADD_FOREIGN_KEY(
 			$this -> getTable(),
 			$this -> schema -> getName(),
+			$this -> schema -> getConstraint(),
 			$this -> schema -> getForeignTable(),
 			$this -> schema -> getForeignColumn(),
 			$this -> schema -> getForeignUpdate(),
 			$this -> schema -> getForeignDelete()
+		);
+	}
+
+	public function SQL_addForeign($tableName,$schemaForeign){
+		return DB::SQL()::ADD_FOREIGN_KEY(
+			$tableName,
+			$schemaForeign -> getName(),
+			$schemaForeign -> getConstraint(),
+			$schemaForeign -> getForeignTable(),
+			$schemaForeign -> getForeignColumn(),
+			$schemaForeign -> getForeignUpdate(),
+			$schemaForeign -> getForeignDelete()
 		);
 	}
 

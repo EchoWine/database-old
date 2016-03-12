@@ -49,7 +49,6 @@ class Schema{
 				
 			}
 
-
 			foreach(DB::fetch(DB::SQL()::SHOW_CONSTRAINT(DB::getName(),$table -> getName())) as $k){
 
 				$c = $table -> getColumn($k['COLUMN_NAME']);

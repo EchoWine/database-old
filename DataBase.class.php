@@ -83,7 +83,7 @@ class DB{
 		if($cfg['restore'] > 0)
 			self::iniRestore();
 
-
+		self::startLog();
 	}
 	
 	/**

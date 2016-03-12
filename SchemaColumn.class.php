@@ -10,12 +10,12 @@ class SchemaColumn{
 			$type;
 
 	public	$length = null,
-	 		$null = null,
+	 		$null = true,
 			$default = null,
 			$primary = false,
 			$unique = false,
 			$auto_increment = false,
-			$index = false,
+			$index = null,
 			$constraint = '';
 
 	public $foreignColumn,$foreignTable,$foreignDelete,$foreignUpdate;

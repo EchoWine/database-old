@@ -40,6 +40,7 @@
 		$tab -> string('name') -> unique();
 		$tab -> string('foo') -> unique() -> null();
 		$tab -> string('fo1o') -> unique() -> null();
+		$tab -> int('fo1os');
 	});
 
 
@@ -55,17 +56,17 @@
  	DB::schema('tab3_tab2') -> bigint('taxi') -> alter();
 
  	$tab1_id = DB::table('tab1') -> insert([
-		['name' => 5,'foo' => 'bar'],
-		['name' => 10,'foo' => null],
-		['name' => 'mah','foo' => 'bam']
+		['name' => md5(microtime()),'foo' => null],
+		['name' => md5(microtime()),'foo' => null],
+		['name' => md5(microtime()),'foo' => null]
 	]);
  	
  	$tab2_id = DB::table('tab2') -> insert(['tab1_id' => $tab1_id[0]]);
- 	$tab3_id = DB::table('tab3') -> insert(['tab1_id' => $tab1_id[1],'username' => 'foo']);
+ 	$tab3_id = DB::table('tab3') -> insert(['tab1_id' => $tab1_id[1],'username' => md5(microtime())]);
  	DB::table('tab3_tab2') -> insert(['tab2_id' => $tab2_id[0],'tab3_id' => $tab3_id[0],'taxi' => 5]);
 
 
- 	DB::table('tab1') -> insert(['name' => 100]);
+ 	DB::table('tab1') -> insert(['name' => md5(microtime())]);
 
 
  	/* --------------------------------------
@@ -138,7 +139,11 @@
 	DB::schema('tab3') -> drop();
 	*/
 
-	
+	DB::schema('tab3') -> drop();
+	DB::schema('tab1') -> drop();
+	DB::schema('tab2') -> drop();
+	DB::schema('tab3_tab2') -> drop();
+
 	// End all schema
 	DB::dropMissing();
 	DB::printLog();

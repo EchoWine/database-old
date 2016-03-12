@@ -80,13 +80,16 @@ class SQL{
 		return "ALTER TABLE $tableName ADD INDEX($indexName)";
 	}
 
-	public static function ADD_FOREIGN_KEY($tableName,$constraintName,$foreignTable,$foreignColumn,$onDelete,$onUpdate){
+	public static function ADD_FOREIGN_KEY($tableName,$column,$constraintName,$foreignTable,$foreignColumn,$onDelete,$onUpdate){
  		
  		$onDelete =  $onDelete ? ' ON DELETE '.$onDelete : '';
  		$onUpdate =  $onUpdate ? ' ON UPDATE '.$onUpdate : '';
+ 		$constraintName = $constraintName != null ? ' CONSTRAINT '.$constraintName : '';
 
 		return "ALTER TABLE $tableName ADD 
-			FOREIGN KEY ($tableName) REFERENCES $foreignTable($foreignColumn)
+			$constraintName 
+			FOREIGN KEY ($column)
+			REFERENCES $foreignTable($foreignColumn)
 			$onDelete $onUpdate
 		";
 
@@ -100,7 +103,7 @@ class SQL{
 	}
 
 	public static function CREATE_TABLE($tableName,$columns){
-		return "CREATE TABLE IF NOT EXISTS $tableName (".explode(",".$columns).")";
+		return "CREATE TABLE IF NOT EXISTS $tableName (".implode(",",$columns).")";
 	}
 
 	public static function EDIT_COLUMN($tableName,$columnName,$column){
@@ -142,33 +145,12 @@ class SQL{
 		die('Error');
 	}
 
-
-	public function COLUMN_INDEX($type){
-		$name = $this -> schema -> getName();
-		switch($type){
-			case 'index':
-				return "INDEX ($name)";
-
-			case 'foreign':
-				return "
-					FOREIGN KEY ($name) 
-					REFERENCES {$this -> schema -> getForeignTable()}({$this -> schema -> getForeignColumn()})
-					{$this -> SQL_columnKeyForeinDelete()}
-					{$this -> SQL_columnKeyForeinUpdate()}
-			";
-
-		}
-
-		return '';
+	public static function ENABLE_CHECKS_FOREIGN(){
+		return "SET FOREIGN_KEY_CHECKS = 1";
 	}
 
-	public function SQL_columnKeyForeinDelete(){
-		return $c = $this -> schema -> getForeignDelete() !== null ? ' ON DELETE '.$c : '';
+	public static function DISABLE_CHECKS_FOREIGN(){
+		return "SET FOREIGN_KEY_CHECKS = 0";
 	}
-
-	public function SQL_columnKeyForeinUpdate(){
-		return $c = $this -> schema -> getForeignUpdate() !== null ? ' ON UPDATE '.$c : '';
-	}
-
 	
 }
