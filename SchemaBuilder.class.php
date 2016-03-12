@@ -234,6 +234,17 @@ class SchemaBuilder{
 	}
 
 	/**
+	 * Define the default value
+	 *
+	 * @param string $default
+	 * @return object $this
+	 */
+	public function default($default){
+		$this -> schema -> setDefault($default);
+		return $this;
+	}
+
+	/**
 	 * Makes the column an index
 	 *
 	 * @return object $this
@@ -310,7 +321,7 @@ class SchemaBuilder{
 		if(!Schema::hasTable($this -> getTable())){
 
 			# Alter database
-			$this -> query($this -> SQL_createTable());
+			$this -> query(DB::SQL()::CREATE_TABLE($this -> getTable(),[$this -> SQL_column($this -> schema)]));
 
 			# Update table schema
 			Schema::addTable($this -> getTable());
@@ -320,7 +331,7 @@ class SchemaBuilder{
 
 		# Check if column doesn't exists
 		if(!$this -> hasColumn($this -> schema -> getName())){
-			$this -> query($this -> SQL_addColumn());
+			$this -> query(DB::SQL()::ADD_COLUMN($this -> getTable(),$this -> SQL_column($this -> schema)));
 
 			# Update Schema
 			Schema::getTable($this -> getTable()) -> addColumn(clone $this -> schema);
@@ -369,7 +380,7 @@ class SchemaBuilder{
 					$this -> query(DB::SQL()::DROP_FOREIGN_KEY($k -> getTable(),$k -> getConstraint()));
 				}
 
-				$this -> query($this -> SQL_editColumnBasics($this -> table,$primary));
+				$this -> query($this -> SQL_editColumnBasics($this -> getTable(),$primary));
 
 				$this -> query(DB::SQL()::DROP_PRIMARY_KEY($this -> getTable()));
 				Schema::getTable($this -> getTable()) -> dropPrimary();
@@ -390,7 +401,7 @@ class SchemaBuilder{
 
 			
 			if($n -> getForeign()){
-				$this -> query($this -> SQL_addColumnForeign());
+				$this -> query($this -> SQL_addForeign($this -> getTable(),$this -> schema));
 
 				# Get new name of constraint
 				$constraint = DB::first(DB::SQL()::SELECT_CONSTRAINT(DB::getName(),$this -> getTable(),$a -> getName()))['CONSTRAINT_NAME'];
@@ -413,7 +424,7 @@ class SchemaBuilder{
 			}
 
 			if(!$a -> hasIndex() && $n -> hasIndex()){
-				$this -> query($this -> SQL_addColumnIndex());
+				$this -> query(DB::SQL()::ADD_INDEX_KEY($this -> getTable(),$this -> schema -> getName()));
 
 				# Update Schema actual
 				$a -> setIndex($a -> getName());
@@ -423,7 +434,7 @@ class SchemaBuilder{
 		}
 
 		foreach($dropped_foreign as $k){
-			$this -> query($this -> SQL_addColumnForeign($k -> getTable(),$k));
+			$this -> query($this -> SQL_addColumnForeign($k -> getTable(),$k -> schema));
 		}
 
 
@@ -433,7 +444,7 @@ class SchemaBuilder{
 
 			# Remove tem
 			$this -> query(DB::SQL()::DISABLE_CHECKS_FOREIGN());
-			$this -> query($this -> SQL_editColumn());
+			$this -> query(DB::SQL()::EDIT_COLUMN($this -> getTable(),$this -> schema -> getName(),$this -> SQL_column($this -> schema)));
 			$this -> query(DB::SQL()::ENABLE_CHECKS_FOREIGN());
 
 			# Update Schema actual
@@ -521,71 +532,40 @@ class SchemaBuilder{
 		die();
 	}
 
-	public function SQL_createTable(){
-		return DB::SQL()::CREATE_TABLE($this -> getTable(),[$this -> SQL_column()]);
-	}
-
-	public function SQL_addColumn(){
-		return DB::SQL()::ADD_COLUMN($this -> getTable(),$this -> SQL_column());
-	}
-
-	public function SQL_editColumn(){
-		return DB::SQL()::EDIT_COLUMN($this -> getTable(),$this -> schema -> getName(),$this -> SQL_column());
-	}
-
 	public function SQL_editColumnBasics($table,$schema){
 		return DB::SQL()::EDIT_COLUMN(
 			$this -> getTable(),
-			$this -> schema -> getName(),
+			$schema -> getName(),
 			DB::SQL()::COLUMN(
-				$this -> schema -> getName(),
-				$this -> schema -> getType(),
-				$this -> schema -> getLength()
+				$schema -> getName(),
+				$schema -> getType(),
+				$schema -> getLength()
 			)
 		);
 	}
-	
-	public function SQL_addColumnIndex(){
-		return DB::SQL()::ADD_INDEX_KEY($this -> getTable(),$this -> schema -> getName());
-	}
 
-	public function SQL_addColumnForeign(){
-		return DB::SQL()::ADD_FOREIGN_KEY(
-			$this -> getTable(),
-			$this -> schema -> getName(),
-			$this -> schema -> getConstraint(),
-			$this -> schema -> getForeignTable(),
-			$this -> schema -> getForeignColumn(),
-			$this -> schema -> getForeignUpdate(),
-			$this -> schema -> getForeignDelete()
-		);
-	}
-
-	public function SQL_addForeign($tableName,$schemaForeign){
+	public function SQL_addForeign($tableName,$schema){
 		return DB::SQL()::ADD_FOREIGN_KEY(
 			$tableName,
-			$schemaForeign -> getName(),
-			$schemaForeign -> getConstraint(),
-			$schemaForeign -> getForeignTable(),
-			$schemaForeign -> getForeignColumn(),
-			$schemaForeign -> getForeignUpdate(),
-			$schemaForeign -> getForeignDelete()
+			$schema -> getName(),
+			$schema -> getConstraint(),
+			$schema -> getForeignTable(),
+			$schema -> getForeignColumn(),
+			$schema -> getForeignUpdate(),
+			$schema -> getForeignDelete()
 		);
 	}
 
-	public function SQL_editColumnKey($k){
-		// return "ALTER TABLE {$this -> getTable()} ADD {$this -> SQL_column()}";
-	}
-
-	public function SQL_column(){
+	public function SQL_column($schema){
 		return DB::SQL()::COLUMN(
-			$this -> schema -> getName(),
-			$this -> schema -> getType(),
-			$this -> schema -> getLength(),
-			$this -> schema -> getPrimary(),
-			$this -> schema -> getUnique(),
-			$this -> schema -> getAutoIncrement(),
-			$this -> schema -> getNull()
+			$schema -> getName(),
+			$schema -> getType(),
+			$schema -> getLength(),
+			$schema -> getDefault(),
+			$schema -> getPrimary(),
+			$schema -> getUnique(),
+			$schema-> getAutoIncrement(),
+			$schema -> getNull()
 		);
 	}
 

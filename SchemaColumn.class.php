@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SchemaColumn
+ * Schema Column
  */
 class SchemaColumn{
 

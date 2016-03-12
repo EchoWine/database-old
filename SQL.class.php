@@ -4,7 +4,7 @@
  * SQL
  */
 class SQL{
-	
+
 	const TINYINT = 'tinyint';
 	const BIGINT = 'bigint';
 	const INT = 'int';
@@ -116,14 +116,15 @@ class SQL{
 		return "ALTER TABLE $tableName ADD $column";
 	}
 
-	public static function COLUMN($name,$type,$length = null,$primary = false,$unique = false,$auto_increment = false,$null = false){
+	public static function COLUMN($name,$type,$length = null,$default = null,$primary = false,$unique = false,$auto_increment = false,$null = false){
 
 		$unique = $unique ? 'UNIQUE' : '';
 		$primary = $primary ? 'PRIMARY KEY' : '';
 		$auto_increment = $auto_increment ? 'AUTO_INCREMENT' : '';
 		$null = $null ? 'NULL' : 'NOT NULL';
+		$default = $default != null ? ' DEFAULT '.(is_string($default) ? "'$default'" : $default) : '';
 
-		return $name." ".self::TYPE($type,$length)." ".$primary." ".$auto_increment." ".$unique." ".$null;
+		return $name." ".self::TYPE($type,$length)." $default $primary $auto_increment $unique $null";
 	}
 
 	public static function TYPE($type,$length){

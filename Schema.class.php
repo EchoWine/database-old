@@ -30,7 +30,7 @@ class Schema{
 					'table' => $table -> getName(),
 					'name' => $k['Field'],
 					'type' => $type,
-					'length' => isset($length[1]) ? $length[1]  : null,
+					'length' => isset($length[1]) ? $length[1] : null,
 					'null' => $k['Null'] == 'YES',
 					'default' => $k['Default'],
 					'primary' => $k['Key'] == 'PRI',

@@ -18,6 +18,8 @@
 
 	]);
 
+
+
 	/*
 	DB::schema('tab1') -> id() -> alter();
 	DB::schema('tab1') -> string('username',30) -> alter();
@@ -38,7 +40,7 @@
 	DB::schema('tab1',function($tab){
 		$tab -> id();
 		$tab -> string('name') -> unique();
-		$tab -> string('foo') -> unique() -> null();
+		$tab -> string('foo') -> unique() -> default('abcde') -> null();
 		$tab -> string('fo1o') -> unique() -> null();
 		$tab -> int('fo1os');
 	});
@@ -118,18 +120,12 @@
  		return $q;
 
  	}) -> join('tab3') -> get();
-
-
-
-
- 	
  
  	/*
  	DB::table('tab1') -> insert(function(){
  		return DB::table('tab1') -> select('name');
  	});
  	*/
-
 
 	/*
 	DB::schema('tab3') -> dropColumn('username');
