@@ -498,7 +498,7 @@ class SchemaBuilder{
 	}
 
 	public function SQL_editColumnBasics($table,$schema){
-		DB::SQL()::COLUMN($s -> getName(),$s -> getType(),$s -> getLength());
+		return DB::SQL()::COLUMN($s -> getName(),$s -> getType(),$s -> getLength());
 	}
 	
 	public function SQL_addColumnIndex(){
@@ -521,7 +521,15 @@ class SchemaBuilder{
 	}
 
 	public function SQL_column(){
-		DB::SQL()::COLUMN($s -> getName(),$s -> getType(),$s -> getLength(),$s -> getPrimary(),$s -> getAutoIncrement(),$s -> getUnique(),$s -> getNull());
+		return DB::SQL()::COLUMN(
+			$s -> getName(),
+			$s -> getType(),
+			$s -> getLength(),
+			$s -> getPrimary(),
+			$s -> getAutoIncrement(),
+			$s -> getUnique(),
+			$s -> getNull()
+		);
 	}
 
 
