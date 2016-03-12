@@ -38,4 +38,20 @@ class SQL{
 			WHERE CONSTRAINT_SCHEMA = '$dbName' AND TABLE_NAME = '$tableName' AND REFERENCED_TABLE_NAME IS NOT NULL
 		";
 	}
+
+	public static function DROP_TABLE($tableName){
+		return "DROP TABLE $tableName";
+	}
+
+	public static function DROP_COLUMN($tableName,$columnName){
+		return "ALTER TABLE $tableName DROP COLUMN $columnName";
+	}
+
+	public static function DROP_FOREIGN_KEY($tableName,$constraintName){
+		return "ALTER TABLE $tableName DROP FOREIGN KEY $constraintName";
+	}
+
+	public static function MODIFY_COLUMN_RESET($tableName,$columnName){
+		return "ALTER TABLE $tableName MODIFY $columnName tinyint(1)";
+	}
 }

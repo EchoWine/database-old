@@ -39,6 +39,7 @@
 		$tab -> id();
 		$tab -> string('name') -> unique();
 		$tab -> string('foo') -> unique() -> null();
+		$tab -> string('fo1o') -> unique() -> null();
 	});
 
 

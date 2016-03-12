@@ -729,10 +729,8 @@ class QueryBuilder{
 
 		foreach($on as $k)
 			$s[] = is_array($k) ? "(".$this -> getOnPartSQL($k,$op).")" : $k -> col1.$k -> op.$k -> col2;
-		
 
 		return implode($s," $op ");
-		
 	}
 
 	/**

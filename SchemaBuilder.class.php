@@ -188,7 +188,7 @@ class SchemaBuilder{
 	public function primary(){
 
 		if(self::$tables[$this -> getTable()] -> hasPrimary())
-			die('['.$this -> getTable().'] There can be only one primary key');
+			self::printError('There can be only one primary key');
 		
 
 		$this -> schema -> setPrimary(true);
@@ -203,7 +203,7 @@ class SchemaBuilder{
 	public function auto_increment(){
 
 		if(self::$tables[$this -> getTable()] -> hasAutoIncrement())
-			die('['.$this -> getTable().'] There can be only one auto_increment field');
+			self::printError('There can be only one auto_increment field');
 		
 
 		$this -> schema -> setAutoIncrement(true);
@@ -217,8 +217,7 @@ class SchemaBuilder{
 	 */
 	public function unique(){
 		$this -> schema -> setUnique(true);
-		return $this;
-
+		return $this -> index();
 	}
 
 	/**
@@ -477,20 +476,27 @@ class SchemaBuilder{
 		}
 	}
 
+	public function printError($mex){
+		echo "<h1>Error in Schema</h1><br>";
+		echo $mex;
+		echo '<h2>Detail</h2>';
+		echo json_encode($this);
+		die();
+	}
 	public function SQL_dropTable(){
-		return "DROP TABLE {$this -> getTable()}";
+		return DB::SQL()::DROP_TABLE($this -> getTable());
 	}
 
 	public function SQL_dropColumn($column){
-		return "ALTER TABLE {$this -> getTable()} DROP COLUMN {$column}";
+		return DB::SQL()::DROP_COLUMN($this -> getTable(),$column);
 	}
 
 	public function SQL_dropForeignKey($column){
-		return "ALTER TABLE {$column -> getTable()} DROP FOREIGN KEY {$column -> getConstraint()}";
+		return DB::SQL()::DROP_FOREIGN_KEY($this -> getTable(),$column -> getConstraint());
 	}
 
 	public function SQL_resetSchemaColumn($column){
-		return "ALTER TABLE {$this -> getTable()} MODIFY {$column -> getName()} tinyint(1)";
+		return DB::SQL()::MODIFY_COLUMN_RESET($this -> getTable(),$column -> getName());
 	}
 
 	public function SQL_createTable(){

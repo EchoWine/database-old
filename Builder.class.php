@@ -16,42 +16,89 @@ class Builder{
 	 */
 	public $count;
 
+	/**
+	 * Table
+	 */
 	public $table;
 
+	/**
+	 * Aggregate (count/min/max) not used
+	 */
 	public $agg = [];
 
+	/**
+	 * Select
+	 */
 	public $select = [];
 
+	/**
+	 * Update
+	 */
 	public $update = [];
 
+	/**
+	 * Order by
+	 */
 	public $orderby = [];
-			
+
+	/**
+	 * Skip N records
+	 */
 	public $skip = NULL;
-			
+	
+	/**
+	 * Take N records
+	 */	
 	public $take = NULL;
-			
+	
+	/**
+	 * Group by
+	 */	
 	public $groupBy = [];
-			
+	
+	/**
+	 * and Where
+	 */		
 	public $andWhere = [];
-			
+	
+	/**
+	 * or Where
+	 */		
 	public $orWhere = [];
-			
+	
+	/**
+	 * join
+	 */		
 	public $join = [];
-			
+	
+	/**
+	 * and on
+	 */		
 	public $andOn = [];
-			
+	
+	/**
+	 * or on
+	 */	
 	public $orOn = [];
-			
+	
+	/**
+	 * union
+	 */
 	public $union = [];
-			
-	public $is_table = false;
-			
+	
+	/**
+	 * Column that will be used as index in array result, e.g. ID
+	 */
 	public $indexResult = "";
 			
-	public $tmp_prepare = [];
-			
+	/**
+	 * Prepare
+	 */
 	public $prepare = [];
-			
+	
+	/**
+	 * last joined table
+	 */
 	public $lastJoinTable = null;
 
 	/**
@@ -59,20 +106,32 @@ class Builder{
 	 */
 	public static $tableAs = array();
 
-	public function __construct(){
+	public function __construct(){}
 
+	/**
+	 * Set prepare
+	 * 
+	 * @param array $prepare
+	 */
+	public function setPrepare($prepare){
+		$this -> prepare = $prepare;
 	}
 
-	public function setPrepare($v){
-		$this -> prepare = $v;
-	}
-
+	/**
+	 * @return array prepare
+	 */
 	public function getPrepare(){
 		return $this -> prepare;
 	}
 
-	public function addPrepare($n,$v){
-		$this -> prepare[$n] = $v;
+	/**
+	 * Add a var
+	 *
+	 * @param string $index
+	 * @param string $prepare
+	 */
+	public function addPrepare($index,$prepare){
+		$this -> prepare[$index] = $prepare;
 	}
 
 	/**
@@ -108,7 +167,12 @@ class Builder{
 		return $c;
 	}
 
-
+	/**
+	 * Add a table
+	 *
+	 * @param string $table
+	 * @return string $alias
+	 */
 	public function addTable($table,$alias = ''){
 
 		if($table instanceof QueryBuilder){
@@ -127,10 +191,16 @@ class Builder{
 	}
 
 
+	/**
+	 * @return string last joined table
+	 */
 	public function getLastJoinTable(){
 		return $this -> lastJoinTable;
 	}
-
+	
+	/**
+	 * @param string $table last joined table
+	 */
 	public function setLastJoinTable($table){
 		$this -> lastJoinTable = $table;
 	}
