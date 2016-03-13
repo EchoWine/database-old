@@ -14,6 +14,16 @@ class SQL{
 	const TEXT = 'text';
 
 
+	const COUNT = 'COUNT';
+	const MAX = 'MAX';
+	const MIN = 'MIN';
+	const AVG = 'AVG';
+	const SUM = 'SUM';
+
+	const AND = 'AND';
+	const OR = 'OR';
+
+
 	const INDEX = 'index';
 	const FOREIGN = 'foreign';
 
@@ -156,4 +166,56 @@ class SQL{
 		return "SET FOREIGN_KEY_CHECKS = 0";
 	}
 	
+	public static function AGGREGATE($function,$value){
+		return "$function($value)";
+	}
+
+	public static function ASC($column){
+		return "$column ASC";
+	}	
+
+	public static function DESC($column){
+		return "$column DESC";
+	}	
+
+	public static function ORDER_BY($columns){
+		return empty($columns) ? '' : ' ORDER BY '.implode(' , ',$columns);
+	}	
+
+	public static function LIMIT($skip = null,$take = null){
+		$skip = $skip !== null ? $skip."," : "";
+		$take = $take !== null ? $take : "";
+		return empty($s) && empty($t) ? "" : "LIMIT {$s}{$t}";
+	}
+
+	public static function COL_OP_VAL($col,$op,$val){
+		return "$col $op $val";
+	}
+	public static function IN($col,$val){
+		return "$col IN (".implode(",",$val).")";
+	}
+
+	public static function LIKE($col,$val){
+		return "$col LIKE $val";
+	}
+
+	public static function IS_NULL($col){
+		return "$col IS NULL";
+	}
+
+	public static function IS_NOT_NULL($col){
+		return "$col IS NOT NULL";
+	}
+
+	public static function AND($exp){
+		return "(".implode(" AND ",$exp).")";
+	}
+
+	public static function OR($exp){
+		return "(".implode(" OR ",$exp).")";
+	}
+
+	public static function WHERE($val){
+		return !empty($val) ? " WHERE $val" : '';
+	}
 }

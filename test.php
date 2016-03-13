@@ -40,8 +40,8 @@
 	DB::schema('tab1',function($tab){
 		$tab -> id();
 		$tab -> string('name') -> unique();
-		$tab -> string('foo') -> unique() -> default('abcde') -> null();
-		$tab -> string('fo1o') -> unique() -> null();
+		$tab -> string('foo') -> unique() -> null();
+		$tab -> string('fo1o') -> default('abcde') -> null();
 		$tab -> int('fo1os');
 	});
 

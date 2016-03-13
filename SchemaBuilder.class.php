@@ -360,6 +360,7 @@ class SchemaBuilder{
 		print_r($n);
 		*/
 		
+		
 		$dropped_foreign = [];
 
 		# Check if there is any difference between actual schema and new
@@ -374,7 +375,6 @@ class SchemaBuilder{
 			if(($a -> getPrimary() && !$n -> getPrimary()) || $n -> getPrimary() && $p != null && !$p -> equals($n)){
 
 				$primary = $p !== null ? $p : $n;
-
 				foreach(Schema::getAllForeignKeyToColumn($this -> getTable(),$this -> schema -> getName()) as $k){
 					$dropped_foreign[] = $k;
 					$this -> query(DB::SQL()::DROP_FOREIGN_KEY($k -> getTable(),$k -> getConstraint()));
@@ -401,7 +401,10 @@ class SchemaBuilder{
 
 			
 			if($n -> getForeign()){
+				$this -> query(DB::SQL()::DISABLE_CHECKS_FOREIGN());
 				$this -> query($this -> SQL_addForeign($this -> getTable(),$this -> schema));
+				$this -> query(DB::SQL()::ENABLE_CHECKS_FOREIGN());
+
 
 				# Get new name of constraint
 				$constraint = DB::first(DB::SQL()::SELECT_CONSTRAINT(DB::getName(),$this -> getTable(),$a -> getName()))['CONSTRAINT_NAME'];

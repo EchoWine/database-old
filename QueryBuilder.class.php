@@ -121,7 +121,7 @@ class QueryBuilder{
 	 * @return int number of records
 	 */
 	public function count(string $v = '*'){
-		return $this -> selectFunction($v,'COUNT');
+		return $this -> selectFunction($v,DB::SQL()::COUNT);
 	}
 
 	
@@ -132,7 +132,7 @@ class QueryBuilder{
 	 * @return mixed lower value of all values in a column
 	 */
 	public function min(string $v){
-		return $this -> selectFunction($v,'MIN');
+		return $this -> selectFunction($v,DB::SQL()::MIN);
 	}
 
 	/**
@@ -142,7 +142,7 @@ class QueryBuilder{
 	 * @return mixed max value of all values in a column
 	 */
 	public function max(string $v){
-		return $this -> selectFunction($v,'MAX');
+		return $this -> selectFunction($v,DB::SQL()::MAX);
 	}
 
 	/**
@@ -152,7 +152,7 @@ class QueryBuilder{
 	 * @return float average value of all values in a column
 	 */
 	public function avg(string $v){
-		return $this -> selectFunction($v,'AVG');
+		return $this -> selectFunction($v,DB::SQL()::AVG);
 	}
 
 	/**
@@ -162,7 +162,7 @@ class QueryBuilder{
 	 * @return float sum of the values in a column
 	 */
 	public function sum(string $v){
-		return $this -> selectFunction($v,'SUM');
+		return $this -> selectFunction($v,DB::SQL()::SUM);
 	}
 	
 	/**
@@ -174,10 +174,12 @@ class QueryBuilder{
 	 */
 	public function selectFunction(string $v,string $f){
 		$c = clone $this;
-		$c -> builder -> addSelect("{$f}({$v})");
+		$sql = DB::SQL()::AGGREGATE($f,$v);
+
+		$c -> builder -> addSelect($sql);
 		$r = $c -> get();
 
-		return isset($r["{$f}({$v})"]) ? $r["{$f}({$v})"] : 0;
+		return isset($r[$sql]) ? $r[$sql] : 0;
 
 	}
 
@@ -188,7 +190,7 @@ class QueryBuilder{
 	 * @return object $this
 	 */
 	public function orderBy(string $c){
-		$this -> builder -> orderby[] = "$c ASC";
+		$this -> builder -> orderby[] = DB::SQL()::ASC($c);
 		return $this;
 	}
 
@@ -199,7 +201,7 @@ class QueryBuilder{
 	 * @return object $this
 	 */
 	public function orderByDesc(string $c){
-		$this -> builder -> orderby[] = "$c DESC";
+		$this -> builder -> orderby[] = DB::SQL()::DESC($c);
 		return $this;
 	}
 
@@ -208,9 +210,8 @@ class QueryBuilder{
 	 *
 	 * @return string SQL code
 	 */
-	public function getOrderBySQL(){
-		$o = $this -> builder -> orderby;
-		return empty($o) ? '' : ' ORDER BY '.implode(' , ',$o);
+	public function SQL_ORDER_BY(){
+		return DB::SQL()::ORDER_BY($this -> builder -> orderby);
 	}
 
 	/**
@@ -258,73 +259,36 @@ class QueryBuilder{
 	 *
 	 * @return string SQL code
 	 */
-	public function getLimitSQL(){
-		$s = isset($this -> builder -> skip) ? $this -> builder -> skip."," : "";
-		$t = isset($this -> builder -> take) ? $this -> builder -> take : "";
-		return empty($s) && empty($t) ? "" : "LIMIT {$s}{$t}";
+	public function SQL_LIMIT(){
+		return DB::SQL()::LIMIT($this -> builder -> skip,$this -> builder -> take);
 	}
 
 	/**
 	 * Add a condition WHERE AND to the query where the results must have a specific value of a column.
 	 * The result may change with the change of the parameters
 	 *
-	 * @param mixed $v1 Indicate the name of the column or a closure execute by advanced where methods. 
-	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param string $v3 optional value of the column
-	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
+	 * @param mixed $fun_col_value Indicate the name of the column || a closure execute by advanced where methods. 
+	 * @param string $value_op if $value is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $value optional value of the column
 	 * @return object $this
 	 */
-	public function where($v1,string $v2 = NULL,string $v3 = NULL,bool $v4 = true){
-
-		// Se si tratta di un where avanzato
-		if($v1 instanceof Closure){
-			$n = DB::table($this -> getBuilderTable());
-			$t = clone $this;
-			$n -> builder -> prepare = $t -> builder -> prepare;
-			$n = $v1($n);
-			$sql = $n -> getWhereSQL(false);
-
-			if(!empty($sql)){
-				$t -> builder -> andWhere[] = $sql;
-				$t -> builder -> prepare = $n -> builder -> prepare;
-			}
-
-			return $t;
-		}
-
-		return $this -> _where($v1,$v2,$v3,$v4,'AND');
+	public function where($fun_col_value,string $value_op = null,string $value = null){
+		return $this -> location($fun_col_value,$value_op,$value,'andWhere');
 	}
 
 	/**
 	 * Add a WHERE OR condition to the query where the results must have a value of a specific column.
 	 * The result may change with the change of the parameters
 	 *
-	 * @param mixed $v1 Indicate the name of the column or a closure execute by advanced where methods. 
-	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param string $v3 optional value of the column
-	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
+	 * @param mixed $fun_col_value Indicate the name of the column || a closure execute by advanced where methods. 
+	 * @param string $value_op if $value is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $value optional value of the column
 	 * @return object $this
 	 */
-	public function orWhere($v1,string $v2 = NULL,string $v3 = NULL,$v4 = true){
-
-		// Se si tratta di un where avanzato
-		if($v1 instanceof Closure){
-			$n = DB::table($this -> getBuilderTable());
-			$t = clone $this;
-			$n -> builder -> prepare = $t -> builder -> prepare;
-			$n = $v1($n);
-			$sql = $n -> getWhereSQL(false);
-
-			if(!empty($sql)){
-				$t -> builder -> orWhere[] = $sql;
-				$t -> builder -> prepare = $n -> builder -> prepare;
-			}
-
-			return $t;
-		}
-
-		return $this -> _where($v1,$v2,$v3,$v4,'OR');
+	public function orWhere($fun_col_value,string $value_op = null,string $value = null){
+		return $this -> location($fun_col_value,$value_op,$value,'orWhere');
 	}
+
 
 	/**
 	 * Add a WHERE condition to the query where the results must have a value of specific column.
@@ -333,43 +297,11 @@ class QueryBuilder{
 	 * @param string $v1 if $v2 is defined indicates the name of the column, otherwise the value of the primary column
 	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
 	 * @param string $v3 optional value of the column
-	 * @param bool $v4 ?? DA RIMUOVERE FORSE ??
-	 * @param string $v5 type of where AND|OR
 	 * @return object clone of $this
 	 */
-	public function _where(string $v1,string $v2 = NULL,string $v3 = NULL,bool $v4 = true,string $ao){
+	public function _where(string $column,string $op,string $value,string $builder){
 		$t = clone $this;
-
-		if(isset($v3)){
-			$col = $v1;
-			$op = $v2;
-			$val = $v3;
-		}else if(isset($v2)){
-			$col = $v1;
-			$op = '=';
-			$val = $v2;
-		}else{
-
-			// Ottengo automaticamente la chiave primaria
-			$col = Schema::getTable($this -> getBuilderTable()) -> getPrimary() -> getName();
-			$op = '=';
-			$val = $v1;
-		}
-
-		if($v4)$val = $t -> setPrepare($val);
-
-		$r = "{$col} {$op} {$val}";
-
-		switch($ao){
-			case 'AND':
-				$t -> builder -> andWhere[] = " ({$r}) ";
-			break;
-			case 'OR':
-				$t -> builder -> orWhere[] = " ({$r}) ";
-			break;
-		}
-
-		return $t;
+		return $t -> locationRaw(DB::SQL()::COL_OP_VAL($column,$op,$t -> setPrepare($value)),$builder);
 	}
 	
 	/**
@@ -380,11 +312,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereIn(string $v,array $a){
-		$t = clone $this;
-		foreach($a as &$k)$k = $t -> setPrepare($k);
-		$a = implode($a,",");
-		$t -> builder -> andWhere[] = "({$v} IN ($a))";
-		return $t;
+		return $this -> locationIn($v,$a,'andWhere');
 	}
 
 	/**
@@ -395,11 +323,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereIn(string $v,array $a){
-		$t = clone $this;
-		foreach($a as &$k)$k = $t -> setPrepare($k);
-		$a = implode($a,",");
-		$t -> builder -> orWhere[] = "({$v} IN ($a))";
-		return $t;
+		return $this -> locationIn($v,$a,'orWhere');
 	}
 
 	/**
@@ -410,10 +334,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereLike(string $v1,string $v2){
-
-		$t = clone $this;
-		$t -> builder -> andWhere[] = "({$v1} LIKE {$t -> setPrepare($v2)})";
-		return $t;
+		return $this -> locationLike($v1,$v2,'andWhere');
 	}
 
 	/**
@@ -424,10 +345,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereLike(string $v1,string $v2){
-
-		$t = clone $this;
-		$t -> builder -> orWhere[] = "({$v1} LIKE {$t -> setPrepare($v2)})";
-		return $t;
+		return $this -> locationLike($v1,$v2,'orWhere');
 	}
 
 	/**
@@ -437,9 +355,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereNull(string $v){
-		$t = clone $this;
-		$t -> builder -> andWhere[] = "({$v} IS NULL)";
-		return $t;
+		return $this -> locationWhereNull($v,'andWhere');
 	}
 	
     /**
@@ -448,11 +364,8 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereNull(string $v){
-		$t = clone $this;
-		$t -> builder -> orWhere[] = "({$v} IS NULL)";
-		return $t;
+		return $this -> locationWhereNull($v,'orWhere');
 	}
-	
 	/**
 	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
 	 *
@@ -460,9 +373,7 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function whereNotNull(string $v){
-		$t = clone $this;
-		$t -> builder -> andWhere[] = "({$v} IS NOT NULL)";
-		return $t;
+		return $this -> locationWhereNotNull($v,'andWhere');
 	}
 	
 	/**
@@ -472,10 +383,9 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereNotNull(string $v){
-		$t = clone $this;
-		$t -> builder -> orWhere[] = "({$v} IS NOT NULL)";
-		return $t;
+		return $this -> locationWhereNotNull($v,'orWhere');
 	}
+
 
 	/**
 	 * Inject a SQL code for obtain a condition AND WHERE to the query 
@@ -484,9 +394,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereRaw(string $v){
-		$t = clone $this;
-		$t -> builder -> andWhere[] = "($v)";
-		return $t;
+		return $this -> locationRaw($v,'andWhere');
 	}
 	
 	/**
@@ -496,9 +404,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereRaw(string $v){
-		$t = clone $this;
-		$t -> builder -> orWhere[] = "($v)";
-		return $t;
+		return $this -> locationRaw($v,'orWhere');
 	}
 
 	/**
@@ -507,20 +413,82 @@ class QueryBuilder{
 	 * @param bool $where indicates if is necessary add a WHERE comand (true, by default) or not (false)
 	 * @return string SQL code
 	 */
-	private function getWhereSQL(bool $where = true){
-		$s = $where ? ' WHERE ' : '';
+	private function SQL_WHERE(bool $where = true){
 
-		$r = array();
+		$r = [];
 
 		if(!empty($this -> builder -> andWhere))
-			$r[] = '('.implode($this -> builder -> andWhere," AND ").')';
+			$r[] = DB::SQL()::AND($this -> builder -> andWhere);
 
 		if(!empty($this -> builder -> orWhere))
-			$r[] = '('.implode($this -> builder -> orWhere," OR ").')';
+			$r[] = DB::SQL()::OR($this -> builder -> orWhere);
 
-		$r = implode($r," AND ");
+		return DB::SQL()::WHERE(DB::SQL()::AND($r));
+	}
 
-		return empty($r) ? "" : $s.$r;
+	public function location($fun_col_value,string $value_op = null,string $value = null,$builder){
+
+		// Se si tratta di un where avanzato
+		if(($r = $this -> locationClosure($fun_col_value,$builder)) !== null)return $r;
+
+		# If only a parameter is defined, get primary key column
+		if($value_op == null)
+			$value_op = Schema::getTable($this -> getBuilderTable()) -> getPrimary() -> getName();
+
+		return $this -> _where($fun_col_value,$value !== null ? $value_op : '=',$value !== null ? $value : $value_op,$builder);
+	}
+
+	/**
+	 * Elaborate content of advanced where 
+	 *
+	 * @param Closure $fun function that contains advanced where
+	 * @param string $builder name of part builder that will be used to store result
+	 * @return object $this
+	 */
+	public function locationClosure($fun,$builder){
+		if($fun instanceof Closure){
+			$n = DB::table($this -> getBuilderTable());
+			$t = clone $this;
+			$n -> builder -> prepare = $t -> builder -> prepare;
+			$n = $fun($n);
+			$sql = $n -> SQL_WHERE(false);
+
+			if(!empty($sql)){
+				$t -> builder -> {$builder}[] = $sql;
+				$t -> builder -> prepare = $n -> builder -> prepare;
+			}
+
+			return $t;
+		}
+
+		return null;
+	}
+	
+	public function locationIn(string $v,array $a,$builder){
+		$t = clone $this;
+		foreach($a as &$k)$k = $t -> setPrepare($k);
+		return $t -> locationRaw(DB::SQL()::IN($v,$a),$builder);
+
+	}
+	
+	public function locationLike($v1,$v2,$builder){
+		return $this -> locationRaw(DB::SQL()::LIKE($v1,$t -> setPrepare($v2),$builder));
+	}
+	
+	public function locationWhereNull($v,$builder){
+		return $this -> locationRaw(DB::SQL()::IS_NULL($v),$builder);
+	}
+
+
+	public function locationWhereNotNull($v,$builder){
+		return $this -> locationRaw(DB::SQL()::IS_NOT_NULL($v),$builder);
+	}
+
+
+	public function locationRaw($v,$builder){
+		$t = clone $this;
+		$t -> builder -> {$builder}[] = $v;
+		return $t;
 	}
 
 	/**
@@ -906,7 +874,7 @@ class QueryBuilder{
 			".implode($t -> builder -> join," ")."
 			SET
 			".implode($kf,",")." 
-			".$this -> getWhereSQL()."
+			".$this -> SQL_WHERE()."
 		");
 
 
@@ -952,7 +920,7 @@ class QueryBuilder{
 			".implode($t -> builder -> join," ")."
 			SET
 			".implode($kf,",")." 
-			".$t -> getWhereSQL()."
+			".$t -> SQL_WHERE()."
 		");
 
 		$r = DB::count($q);
@@ -971,7 +939,7 @@ class QueryBuilder{
 		return $this -> query("
 			DELETE {$v} FROM {$this -> getBuilderTable()} 
 			".implode($this -> builder -> join," ")."
-			".$this -> getWhereSQL()."
+			".$this -> SQL_WHERE()."
 		");
 	}
 
@@ -1074,10 +1042,10 @@ class QueryBuilder{
 		$c = "
 			SELECT ".implode($this -> builder -> select,",")." FROM {$this -> getBuilderTable()} 
 			".implode($this -> builder -> join," ")."
-			".$this -> getWhereSQL()."
+			".$this -> SQL_WHERE()."
 			".$this -> getGroupBySQL()."
-			".$this -> getOrderBySQL()."
-			".$this -> getLimitSQL()."
+			".$this -> SQL_ORDER_BY()."
+			".$this -> SQL_LIMIT()."
 		";
 
 		$t = empty($t) ? $c : "{$t}($c) as tmp".++$i;
