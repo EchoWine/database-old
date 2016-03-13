@@ -352,6 +352,7 @@ class QueryBuilder{
 	public function orWhereNull(string $v){
 		return $this -> locationWhereNull($v,'orWhere');
 	}
+
 	/**
 	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
 	 *
@@ -412,6 +413,16 @@ class QueryBuilder{
 		return $where ? DB::SQL()::WHERE($r) : $r;
 	}
 
+	/**
+	 * Add a condition $buider to the query where the results must have a specific value of a column.
+	 * The result may change with the change of the parameters
+	 *
+	 * @param mixed $fun_col_value Indicate the name of the column || a closure execute by advanced where methods. 
+	 * @param string $value_op if $value is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $value optional value of the column
+	 * @param string $builder
+	 * @return object $this
+	 */
 	public function location($fun_col_value,string $value_op = null,string $value = null,$builder){
 
 		// Se si tratta di un where avanzato
@@ -451,12 +462,12 @@ class QueryBuilder{
 	}
 
 	/**
-	 * Add a WHERE condition to the query where the results must have a value of specific column.
+	 * Add a $builder condition to the query where the results must have a value of specific column.
 	 * The result may change with the change of the parameters
 	 *
-	 * @param string $v1 if $v2 is defined indicates the name of the column, otherwise the value of the primary column
-	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param string $v3 optional value of the column
+	 * @param string $column
+	 * @param string $op
+	 * @param string $value
 	 * @return object clone of $this
 	 */
 	public function _location(string $column,string $op,string $value,string $builder){
@@ -464,7 +475,14 @@ class QueryBuilder{
 		return $t -> locationRaw(DB::SQL()::COL_OP_VAL($column,$op,$t -> setPrepare($value)),$builder);
 	}
 
-	
+	/**
+	 * Add a condition $builder IN
+	 *
+	 * @param string $v name of the column
+	 * @param array $a array of value
+	 * @param string $builder
+	 * @return object clone of $this
+     */
 	public function locationIn(string $v,array $a,$builder){
 		$t = clone $this;
 		foreach($a as &$k)$k = $t -> setPrepare($k);
@@ -472,24 +490,51 @@ class QueryBuilder{
 
 	}
 	
+	/**
+	 * Add a condition $builder LIKE
+	 *
+	 * @param string $v1 name of the column
+	 * @param string $v2 value
+	 * @param string $builder
+	 * @return object clone of $this
+     */
 	public function locationLike($v1,$v2,$builder){
 		$t = clone $this;
 		return $t -> locationRaw(DB::SQL()::LIKE($v1,$t -> setPrepare($v2)),$builder);
 	}
 	
+	/**
+	 * Add a condition $builder NULL
+	 *
+	 * @param string $v name of the column
+	 * @param string $builder
+	 * @return object clone of $this
+     */
 	public function locationWhereNull($v,$builder){
 		return $this -> locationRaw(DB::SQL()::IS_NULL($v),$builder);
 	}
 
-
+	/**
+	 * Add a condition $builder NOT NULL
+	 *
+	 * @param string $v name of the column
+	 * @param string $builder
+	 * @return object clone of $this
+     */
 	public function locationWhereNotNull($v,$builder){
 		return $this -> locationRaw(DB::SQL()::IS_NOT_NULL($v),$builder);
 	}
 
-
-	public function locationRaw($v,$builder){
+	/**
+	 * Add a condition $builder IN
+	 *
+	 * @param string $sql SQL code
+	 * @param string $builder
+	 * @return object clone of $this
+     */
+	public function locationRaw($sql,$builder){
 		$t = clone $this;
-		$t -> builder -> {$builder}[] = $v;
+		$t -> builder -> {$builder}[] = $sql;
 		return $t;
 	}
 
