@@ -208,11 +208,11 @@ class SQL{
 	}
 
 	public static function AND($exp){
-		return "(".implode(" AND ",$exp).")";
+		return !empty($exp) ? "(".implode(" AND ",$exp).")" : '';
 	}
 
 	public static function OR($exp){
-		return "(".implode(" OR ",$exp).")";
+		return !empty($exp) ? "(".implode(" OR ",$exp).")" : '';
 	}
 
 	public static function WHERE($val){

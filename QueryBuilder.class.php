@@ -289,20 +289,6 @@ class QueryBuilder{
 		return $this -> location($fun_col_value,$value_op,$value,'orWhere');
 	}
 
-
-	/**
-	 * Add a WHERE condition to the query where the results must have a value of specific column.
-	 * The result may change with the change of the parameters
-	 *
-	 * @param string $v1 if $v2 is defined indicates the name of the column, otherwise the value of the primary column
-	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
-	 * @param string $v3 optional value of the column
-	 * @return object clone of $this
-	 */
-	public function _where(string $column,string $op,string $value,string $builder){
-		$t = clone $this;
-		return $t -> locationRaw(DB::SQL()::COL_OP_VAL($column,$op,$t -> setPrepare($value)),$builder);
-	}
 	
 	/**
 	 * Add a condition WHERE IN to the query where the results must have a value of the specific column present on the list of elements
@@ -416,14 +402,14 @@ class QueryBuilder{
 	private function SQL_WHERE(bool $where = true){
 
 		$r = [];
-
 		if(!empty($this -> builder -> andWhere))
 			$r[] = DB::SQL()::AND($this -> builder -> andWhere);
 
 		if(!empty($this -> builder -> orWhere))
 			$r[] = DB::SQL()::OR($this -> builder -> orWhere);
 
-		return DB::SQL()::WHERE(DB::SQL()::AND($r));
+		$r = DB::SQL()::AND($r);
+		return $where ? DB::SQL()::WHERE($r) : $r;
 	}
 
 	public function location($fun_col_value,string $value_op = null,string $value = null,$builder){
@@ -435,7 +421,7 @@ class QueryBuilder{
 		if($value_op == null)
 			$value_op = Schema::getTable($this -> getBuilderTable()) -> getPrimary() -> getName();
 
-		return $this -> _where($fun_col_value,$value !== null ? $value_op : '=',$value !== null ? $value : $value_op,$builder);
+		return $this -> _location($fun_col_value,$value !== null ? $value_op : '=',$value !== null ? $value : $value_op,$builder);
 	}
 
 	/**
@@ -463,6 +449,21 @@ class QueryBuilder{
 
 		return null;
 	}
+
+	/**
+	 * Add a WHERE condition to the query where the results must have a value of specific column.
+	 * The result may change with the change of the parameters
+	 *
+	 * @param string $v1 if $v2 is defined indicates the name of the column, otherwise the value of the primary column
+	 * @param string $v2 if $v3 is defined indicates the comparison agent, otherwise the value of the column
+	 * @param string $v3 optional value of the column
+	 * @return object clone of $this
+	 */
+	public function _location(string $column,string $op,string $value,string $builder){
+		$t = clone $this;
+		return $t -> locationRaw(DB::SQL()::COL_OP_VAL($column,$op,$t -> setPrepare($value)),$builder);
+	}
+
 	
 	public function locationIn(string $v,array $a,$builder){
 		$t = clone $this;
@@ -472,7 +473,8 @@ class QueryBuilder{
 	}
 	
 	public function locationLike($v1,$v2,$builder){
-		return $this -> locationRaw(DB::SQL()::LIKE($v1,$t -> setPrepare($v2),$builder));
+		$t = clone $this;
+		return $t -> locationRaw(DB::SQL()::LIKE($v1,$t -> setPrepare($v2)),$builder);
 	}
 	
 	public function locationWhereNull($v,$builder){
@@ -672,23 +674,22 @@ class QueryBuilder{
 			$a_and[] = $this -> getOnPartSQL($this -> builder -> andOn,'AND');
 
 		if(!empty($and))
-			$a_and[] = '('.implode($and," AND ").')';
+			$a_and[] = DB::SQL()::AND($and);
 
 		if(!empty($this -> builder -> orOn))
 			$a_or[] = $this -> getOnPartSQL($this -> builder -> orOn,'OR');
 
 		if(!empty($or))
-			$a_or[] = '('.implode($or," OR ").')';
+			$a_or[] = DB::SQL()::AND($or);
 
 		$s = [];
 		if(!empty($a_or))
-			$s[] = implode($a_or,' OR ');
+			$s[] = DB::SQL()::OR($a_or);
 
 		if(!empty($a_and))
-			$s[] = implode($a_and,' AND ');
+			$s[] = DB::SQL()::AND($a_and);
 
-
-		return implode($s," AND ");
+		return DB::SQL()::AND($s);
 	}
 
 

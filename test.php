@@ -40,7 +40,7 @@
 	DB::schema('tab1',function($tab){
 		$tab -> id();
 		$tab -> string('name') -> unique();
-		$tab -> string('foo') -> unique() -> null();
+		$tab -> string('foo') -> null();
 		$tab -> string('fo1o') -> default('abcde') -> null();
 		$tab -> int('fo1os');
 	});
@@ -60,7 +60,7 @@
  	$tab1_id = DB::table('tab1') -> insert([
 		['name' => md5(microtime()),'foo' => null],
 		['name' => md5(microtime()),'foo' => null],
-		['name' => md5(microtime()),'foo' => null]
+		['name' => md5(microtime()),'foo' => '123']
 	]);
  	
  	$tab2_id = DB::table('tab2') -> insert(['tab1_id' => $tab1_id[0]]);
@@ -88,6 +88,7 @@
 
  	DB::table('tab2')
  	-> join('tab3_tab2',function($q){
+
  		$q = $q -> where('tab3_tab2.taxi','=',5);
  		return $q;
 
@@ -131,6 +132,25 @@
 	DB::schema('tab3') -> dropColumn('username');
 	DB::schema('tab3') -> drop();
 	*/
+
+	DB::table('tab1')
+	-> orWhere(function($q){
+		$q = $q -> orWhere('foo','123');
+		$q = $q -> orWhereIn('foo',['123']);
+		$q = $q -> orWhereLike('foo','%123%');
+		$q = $q -> orWhereNull('foo');
+		$q = $q -> orWhereNotNull('foo');
+		return $q;
+	})
+	-> orWhere(function($q){
+		$q = $q -> where('foo','123');
+		$q = $q -> whereIn('foo',['123']);
+		$q = $q -> whereLike('foo','%123%');
+		$q = $q -> whereNull('foo');
+		$q = $q -> whereNotNull('foo');
+		return $q;
+	})
+	-> get();
 
 	DB::schema('tab3') -> drop();
 	DB::schema('tab1') -> drop();
