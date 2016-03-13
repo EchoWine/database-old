@@ -381,7 +381,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereRaw(string $v){
-		return $this -> locationRaw($v,'andWhere');
+		return $this -> builderRaw($v,'andWhere');
 	}
 	
 	/**
@@ -391,7 +391,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereRaw(string $v){
-		return $this -> locationRaw($v,'orWhere');
+		return $this -> builderRaw($v,'orWhere');
 	}
 
 	/**
@@ -471,8 +471,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function _location(string $column,string $op,string $value,string $builder){
-		$t = clone $this;
-		return $t -> locationRaw(DB::SQL()::COL_OP_VAL($column,$op,$t -> setPrepare($value)),$builder);
+		return $this -> builderRaw(DB::SQL()::COL_OP_VAL($column,$op,$this -> setPrepare($value)),$builder);
 	}
 
 	/**
@@ -484,9 +483,8 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function locationIn(string $v,array $a,$builder){
-		$t = clone $this;
-		foreach($a as &$k)$k = $t -> setPrepare($k);
-		return $t -> locationRaw(DB::SQL()::IN($v,$a),$builder);
+		foreach($a as &$k)$k = $this -> setPrepare($k);
+		return $this -> builderRaw(DB::SQL()::IN($v,$a),$builder);
 
 	}
 	
@@ -499,8 +497,7 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function locationLike($v1,$v2,$builder){
-		$t = clone $this;
-		return $t -> locationRaw(DB::SQL()::LIKE($v1,$t -> setPrepare($v2)),$builder);
+		return $this -> builderRaw(DB::SQL()::LIKE($v1,$this -> setPrepare($v2)),$builder);
 	}
 	
 	/**
@@ -511,7 +508,7 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function locationWhereNull($v,$builder){
-		return $this -> locationRaw(DB::SQL()::IS_NULL($v),$builder);
+		return $this -> builderRaw(DB::SQL()::IS_NULL($v),$builder);
 	}
 
 	/**
@@ -522,20 +519,7 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function locationWhereNotNull($v,$builder){
-		return $this -> locationRaw(DB::SQL()::IS_NOT_NULL($v),$builder);
-	}
-
-	/**
-	 * Add a condition $builder IN
-	 *
-	 * @param string $sql SQL code
-	 * @param string $builder
-	 * @return object clone of $this
-     */
-	public function locationRaw($sql,$builder){
-		$t = clone $this;
-		$t -> builder -> {$builder}[] = $sql;
-		return $t;
+		return $this -> builderRaw(DB::SQL()::IS_NOT_NULL($v),$builder);
 	}
 
 	/**
@@ -546,9 +530,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function increment(string $c,float $v = 1){
-		$t = clone $this;
-		$t -> builder -> update[] = "{$c} = {$c} + ".$t -> setPrepare($v);
-		return $t;
+		return $this -> builderRaw(DB::SQL()::INCREMENT($c,$this -> setPrepare($v)),'update');
 	}
 	
 	/**
@@ -559,9 +541,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function decrement(string $c,float $v = 1){
-		$t = clone $this;
-		$t -> builder -> update[] = "{$c} = {$c} - ".$t -> setPrepare($v);
-		return $t;
+		return $this -> builderRaw(DB::SQL()::DECREMENT($c,$this -> setPrepare($v)),'update');
 	}
 
 	/**
@@ -571,6 +551,18 @@ class QueryBuilder{
 	 */
 	public function getBuilderTable(){
 		return implode($this -> builder -> table,",");
+	}
+
+	/**
+	 * Add a condition $builder IN
+	 *
+	 * @param string $sql SQL code
+	 * @param string $builder
+	 * @return object clone of $this
+     */
+	public function builderRaw($sql,$builder){
+		$this -> builder -> {$builder}[] = $sql;
+		return clone $this;
 	}
 
 	/**

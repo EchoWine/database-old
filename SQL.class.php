@@ -191,6 +191,7 @@ class SQL{
 	public static function COL_OP_VAL($col,$op,$val){
 		return "$col $op $val";
 	}
+
 	public static function IN($col,$val){
 		return "$col IN (".implode(",",$val).")";
 	}
@@ -217,5 +218,12 @@ class SQL{
 
 	public static function WHERE($val){
 		return !empty($val) ? " WHERE $val" : '';
+	}
+
+	public static function INCREMENT($column,$value){
+		return "$column = $column + $value";
+	}
+	public static function DECREMENT($column,$value){
+		return "$column = $column + $value";
 	}
 }
