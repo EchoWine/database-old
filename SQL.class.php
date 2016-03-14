@@ -28,6 +28,13 @@ class SQL{
 	const FOREIGN = 'foreign';
 
 
+	const LEFT_JOIN = 'LEFT JOIN';
+	const RIGHT_JOIN = 'RIGHT JOIN';
+	const CROSS_JOIN = 'CROSS JOIN';
+	const JOIN = 'JOIN';
+
+
+
 	/**
 	 * @return string get all the tables
 	 */
@@ -225,5 +232,18 @@ class SQL{
 	}
 	public static function DECREMENT($column,$value){
 		return "$column = $column + $value";
+	}
+
+	public static function REMOVE_ALIAS($table){
+		return str_replace(' ','',explode("as",$table)[0]);
+	}
+
+	public static function GET_ALIAS($table){
+		$r = explode("as",$table);
+		return [str_replace(' ','',$r[0]),isset($r[1]) ? str_replace(' ','',$r[1]) : str_replace(' ','',$r[0])];
+	}
+
+	public static function JOIN($type,$table,$on){
+		return "$type $table ON $on";
 	}
 }

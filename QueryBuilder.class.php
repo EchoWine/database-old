@@ -36,7 +36,7 @@ class QueryBuilder{
 			// Jesk
 			// $v = "(".$table -> getUnionSQL().") as $as";
 
-			$this -> builder -> setPrepare($t -> builder -> getPrepare());
+			$this -> builder -> setPrepare($table -> builder -> getPrepare());
 		}
 
 		$this -> builder -> addTable($table,$alias);
@@ -421,18 +421,19 @@ class QueryBuilder{
 	 * @param string $value_op if $value is defined indicates the comparison agent, otherwise the value of the column
 	 * @param string $value optional value of the column
 	 * @param string $builder
+	 * @param bool $prepare
 	 * @return object $this
 	 */
-	public function location($fun_col_value,string $value_op = null,string $value = null,$builder){
+	public function location($fun_col_value,string $value_op = null,string $value = null,$builder,$prepare = true){
 
 		// Se si tratta di un where avanzato
 		if(($r = $this -> locationClosure($fun_col_value,$builder)) !== null)return $r;
 
 		# If only a parameter is defined, get primary key column
 		if($value_op == null)
-			$value_op = Schema::getTable($this -> getBuilderTable()) -> getPrimary() -> getName();
+			$value_op = Schema::getTable(DB::SQL()::REMOVE_ALIAS($this -> getBuilderTable())) -> getPrimary() -> getName();
 
-		return $this -> _location($fun_col_value,$value !== null ? $value_op : '=',$value !== null ? $value : $value_op,$builder);
+		return $this -> _location($fun_col_value,$value !== null ? $value_op : '=',$value !== null ? $value : $value_op,$builder,$prepare);
 	}
 
 	/**
@@ -468,10 +469,12 @@ class QueryBuilder{
 	 * @param string $column
 	 * @param string $op
 	 * @param string $value
+	 * @param string $builder
+	 * @param bool $prepare
 	 * @return object clone of $this
 	 */
-	public function _location(string $column,string $op,string $value,string $builder){
-		return $this -> builderRaw(DB::SQL()::COL_OP_VAL($column,$op,$this -> setPrepare($value)),$builder);
+	public function _location(string $column,string $op,string $value,string $builder,$prepare = true){
+		return $this -> builderRaw(DB::SQL()::COL_OP_VAL($column,$op,$prepare ? $this -> setPrepare($value) : $value),$builder);
 	}
 
 	/**
@@ -550,7 +553,7 @@ class QueryBuilder{
 	 * @return string name table
 	 */
 	public function getBuilderTable(){
-		return implode($this -> builder -> table,",");
+		return $this -> builder -> table;
 	}
 
 	/**
@@ -581,7 +584,7 @@ class QueryBuilder{
 			$table2_col1 = null;
 		}
 
-		return $this -> _join('LEFT JOIN',$table,$table2_col1);
+		return $this -> _join(DB::SQL()::LEFT_JOIN,$table,$table2_col1);
 	}
 
 	/**
@@ -600,7 +603,26 @@ class QueryBuilder{
 			$table2_col1 = null;
 		}
 
-		return $this -> _join('RIGHT JOIN',$table,$table2_col1);
+		return $this -> _join(DB::SQL()::RIGHT_JOIN,$table,$table2_col1);
+	}
+
+	/**
+	 * Add a CROSS JOIN with an other table
+	 *
+	 * @param string $t name of the second table
+	 * @param string $v1 name of the column of the primary table
+	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
+	 * @param string $v3 optional name of the column of the second table
+	 * @return object $this
+	 */
+	public function crossJoin($table,$table2_col1 = null,string $op_col2 = null,string $col2 = NULL){
+
+		if($op_col2 !== null){
+			$this -> on($table2_col1,$op_col2,$col2);
+			$table2_col1 = null;
+		}
+
+		return $this -> _join(DB::SQL()::CROSS_JOIN,$table,$table2_col1,null,false);
 	}
 
 	/**
@@ -619,7 +641,7 @@ class QueryBuilder{
 			$table2_col1 = null;
 		}
 
-		return $this -> _join('JOIN',$table,$table2_col1);
+		return $this -> _join(DB::SQL()::JOIN,$table,$table2_col1);
 	}
 
 	/**
@@ -629,7 +651,7 @@ class QueryBuilder{
 	 * @param string $table name of the secondary table
 	 * @return object clone of $this
 	 */
-	public function _join(string $ACT,$table,$table_fun = null,$last = null){
+	public function _join(string $ACT,$table,$table_fun = null,$last = null,$on = true){
 
 		$t = clone $this;
 
@@ -650,6 +672,8 @@ class QueryBuilder{
 
 		$and = [];
 		$or = [];
+
+
 		if(is_object($table_fun) && ($table_fun instanceof Closure)){
 			$n = DB::table($t -> getBuilderTable());
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -668,32 +692,36 @@ class QueryBuilder{
 			die("Schema: $table doesn't exists");
 		}
 
-		if(empty($t -> builder -> orOn) && empty($t -> builder -> andOn)){
+		if($on && empty($t -> builder -> orOn) && empty($t -> builder -> andOn)){
+			
+			list($table_g,$table_alias) = DB::SQL()::GET_ALIAS($table);
+			list($s_last_g,$s_last_alias) = DB::SQL()::GET_ALIAS($s_last);
 
-			$k1 = Schema::getTable($table) -> getForeignKeyTo($s_last);
-			$k2 = Schema::getTable($s_last) -> getForeignKeyTo($table);
-
+			$k1 = Schema::getTable($table_g) -> getForeignKeyTo($s_last_g);
+			$k2 = Schema::getTable($s_last_g) -> getForeignKeyTo($table_g);
 
 			if($k1 !== null)
 				$k = $k1;
+			
 			else if($k2 !== null)
 				$k = $k2;
+			
 			else{
-				die("<br>\nCannot relate $last with $table: Error with foreign key\n<br>");
+				die("<br>\nCannot relate $s_last with $table: Error with foreign key\n<br>");
 			}
 			
-			$c1 = $k -> getForeignTable().".".$k -> getForeignColumn();
-			$c2 = $k -> getTable().".".$k -> getName();
+			$c1 = ($k1 == null ? $table_alias : $s_last_alias).".".$k -> getForeignColumn();
+			$c2 = ($k1 !== null ? $table_alias : $s_last_alias).".".$k -> getName();
 
 			$t = $t -> on($c1,'=',$c2);
 
-			$last = $k -> getTable();
+			$last = $k1 != null ? $table : $s_last;
 
 		}
 
 		$t -> builder -> setLastJoinTable($last);
 
-		$t -> builder -> join[] = "{$ACT} {$table} ON ".$t -> getOnSQL($and,$or)."";
+		$t -> builder -> join[] = DB::SQL()::JOIN($ACT,$table,$t -> getOnSQL($and,$or));
 
 		$t -> builder -> andOn = [];
 		$t -> builder -> orOn = [];
@@ -708,13 +736,13 @@ class QueryBuilder{
 		$a_or = [];
 
 		if(!empty($this -> builder -> andOn))
-			$a_and[] = $this -> getOnPartSQL($this -> builder -> andOn,'AND');
+			$a_and[] = DB::SQL()::AND($this -> builder -> andOn);
 
 		if(!empty($and))
 			$a_and[] = DB::SQL()::AND($and);
 
 		if(!empty($this -> builder -> orOn))
-			$a_or[] = $this -> getOnPartSQL($this -> builder -> orOn,'OR');
+			$a_or[] =  DB::SQL()::OR($this -> builder -> andOr);
 
 		if(!empty($or))
 			$a_or[] = DB::SQL()::AND($or);
@@ -729,68 +757,32 @@ class QueryBuilder{
 		return DB::SQL()::AND($s);
 	}
 
-
-	public function getOnPartSQL($on,$op){
-		$s = [];
-
-		foreach($on as $k)
-			$s[] = is_array($k) ? "(".$this -> getOnPartSQL($k,$op).")" : $k -> col1.$k -> op.$k -> col2;
-
-		return implode($s," $op ");
+	/**
+	 * Add AND ON JOIN
+	 */
+	public function on($col1_fun,string $op_col2 = null,string $col2 = null){
+		return $this -> location($col1_fun,$op_col2,$col2,'andOn',false);
 	}
 
 	/**
-	 * Add a condition ON JOIN
-	 *
+	 * Add OR ON JOIN
 	 */
-	public function on($col1_fun,string $op_col2 = null,string $col2 = null){
-
-		if(($c = $this -> onFun($col1_fun,"AND")) != null)
-			return $c;
-
-		return $this -> _on($col1_fun,$col2 != null ? $op_col2 : '=',$col2 == null ? $op_col2 : $col2);
-	}
-
-	public function onFun($fun,$op){
-
-		if(is_object($fun) && ($fun instanceof Closure)){
-			$t = clone $this;
-			$n = DB::table($t -> getBuilderTable());
-			$n -> builder -> prepare = $t -> builder -> prepare;
-			$n = $fun($n);
-
-			$m = array_merge($n -> builder -> orOn,$n -> builder -> andOn);
-
-			switch($op){
-				case 'AND': $t -> builder -> andOn[] = $m; break;
-				case 'OR': $t -> builder -> orOn[] = $m; break;
-			}
-			
-			$t -> builder -> prepare = $n -> builder -> prepare;
-
-			return $t;
-		}
-
-		return null;
-	}
-
 	public function orOn($col1_fun,string $op_col2 = null,string $col2 = null){
-		if(($c = $this -> onFun($col1_fun,"OR")) != null)
-			return $c;
-
-		return $this -> _on($col1_fun,$col2 != null ? $op_col2 : '=',$col2 == null ? $op_col2 : $col2,'OR');
+		return $this -> location($col1_fun,$op_col2,$col2,'orOn',false);
 	}
 
-	public function _on(string $col1,string $op,string $col2,$type = 'AND'){
-		$t = clone $this;
-		$o = (object)['col1' => $col1,'op' => $op,'col2' => $col2];
+	/**
+	 * Add AND HAVING
+	 */
+	public function having($col1_fun,string $op_col2 = null,string $col2 = null){
+		return $this -> location($col1_fun,$op_col2,$col2,'andHaving');
+	}
 
-		switch($type){
-			case 'AND': $t -> builder -> andOn[] = $o; break;
-			case 'OR': $t -> builder -> orOn[] = $o; break;
-		}
-
-		return $t;
+	/**
+	 * Add OR HAVING
+	 */
+	public function orHaving($col1_fun,string $op_col2 = null,string $col2 = null){
+		return $this -> location($col1_fun,$op_col2,$col2,'orHaving');
 	}
 
 	/**

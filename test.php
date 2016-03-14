@@ -45,7 +45,6 @@
 		$tab -> int('fo1os');
 	});
 
-
 	DB::schema('tab2') -> id() -> alter();
 	DB::schema('tab2') -> bigint('tab1_id') -> foreign('tab1','id') -> alter();
 
@@ -83,13 +82,13 @@
  	DB::table('tab3_tab2') -> join(['tab3','tab2']) -> get();
 
 
- 	DB::table('tab2') -> join('tab3_tab2') -> join('tab3') -> get();
+ 	DB::table('tab2 as ttt') -> join('tab3_tab2') -> join('tab3') -> get();
 
 
- 	DB::table('tab2')
- 	-> join('tab3_tab2',function($q){
+ 	DB::table('tab2 as tb2')
+ 	-> join('tab3_tab2 as tb32',function($q){
 
- 		$q = $q -> where('tab3_tab2.taxi','=',5);
+ 		$q = $q -> where('tb32.taxi','=',5);
  		return $q;
 
  	}) -> join('tab3') -> get();
@@ -121,6 +120,10 @@
  		return $q;
 
  	}) -> join('tab3') -> get();
+
+ 	DB::table('tab2 as tb2')
+ 	-> crossJoin('tab3_tab2 as 2')
+ 	-> join('tab3') -> get();
  
  	/*
  	DB::table('tab1') -> insert(function(){
@@ -151,6 +154,11 @@
 		return $q;
 	})
 	-> get();
+
+	DB::table('tab1') -> count();
+	DB::table('tab1') -> max('id');
+	DB::table('tab1') -> min('id');
+	DB::table('tab1') -> avg('id') ;
 
 	DB::schema('tab3') -> drop();
 	DB::schema('tab1') -> drop();

@@ -80,6 +80,17 @@ class Builder{
 	 * or on
 	 */	
 	public $orOn = [];
+
+	
+	/**
+	 * and having
+	 */		
+	public $andHaving = [];
+	
+	/**
+	 * or having
+	 */	
+	public $orHaving = [];
 	
 	/**
 	 * union
@@ -181,11 +192,8 @@ class Builder{
 			}
 		}
 
-		if($alias !== null)
-			$this -> table[$alias] = $table;
-		else
-			$this -> table[] = $table;
-
+		$this -> table = $table;
+		$this -> alias = $alias;
 
 		$this -> setLastJoinTable($table);
 	}
@@ -203,6 +211,13 @@ class Builder{
 	 */
 	public function setLastJoinTable($table){
 		$this -> lastJoinTable = $table;
+	}
+
+	/**
+	 * @param string $sql add a select
+	 */
+	public function addSelect($sql){
+		$this -> select[] = $sql;
 	}
 
 }
