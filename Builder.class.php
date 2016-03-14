@@ -188,7 +188,7 @@ class Builder{
 
 		if($table instanceof QueryBuilder){
 			if($alias === null){
-				$alias = slef::getTableAs();
+				$alias = self::getTableAs();
 			}
 		}
 

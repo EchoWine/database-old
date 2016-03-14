@@ -30,13 +30,13 @@ class QueryBuilder{
 		if($table instanceof Closure){
 			$table = $table();
 
-			if($alias !== null)
-				$alias = self::getTableAs();
+			if($alias == null)
+				$alias = Builder::getTableAs();
 
-			// Jesk
-			// $v = "(".$table -> SQL_UNION().") as $as";
 
 			$this -> builder -> setPrepare($table -> builder -> getPrepare());
+
+			$table = DB::SQL()::ALIAS($table -> SQL_UNION(),$alias);
 		}
 
 		$this -> builder -> addTable($table,$alias);
@@ -1085,7 +1085,7 @@ class QueryBuilder{
 	public function SQL_SELECT(){
 
 		if(empty($this -> builder -> select))$this -> builder -> select[] = DB::SQL()::SELECT_ALL;
-		
+
 		//$t = "";
 		$i = 0;
 

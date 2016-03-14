@@ -240,6 +240,10 @@ class SQL{
 		return str_replace(' ','',explode("as",$table)[0]);
 	}
 
+	public static function ALIAS($val,$alias){
+		return "$val as $alias";
+	}
+
 	public static function GET_ALIAS($table){
 		$r = explode("as",$table);
 		return [str_replace(' ','',$r[0]),isset($r[1]) ? str_replace(' ','',$r[1]) : str_replace(' ','',$r[0])];
@@ -262,7 +266,7 @@ class SQL{
 	}
 
 	public static function UNION($select){
-		return implode(" UNION ",$select);
+		return "(".implode(" UNION ",$select).")";
 	}
 
 	public static function SELECT($columns,$from,$exp){
