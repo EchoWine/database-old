@@ -142,8 +142,10 @@
 		return DB::table(function(){
 			return DB::table('tab1');
 		});
-	}) -> get();
-	
+	})
+	-> union(DB::table('tab1'))
+	-> get();
+
 	DB::table('tab1')
 	-> orWhere(function($q){
 		$q = $q -> orWhere('foo','123');

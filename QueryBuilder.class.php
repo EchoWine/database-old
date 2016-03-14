@@ -36,7 +36,7 @@ class QueryBuilder{
 
 			$this -> builder -> setPrepare($table -> builder -> getPrepare());
 
-			$table = DB::SQL()::ALIAS($table -> SQL_UNION(),$alias);
+			$table = DB::SQL()::ALIAS_FROM($table -> SQL_UNION(),$alias);
 		}
 
 		$this -> builder -> addTable($table,$alias);

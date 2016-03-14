@@ -240,8 +240,8 @@ class SQL{
 		return str_replace(' ','',explode("as",$table)[0]);
 	}
 
-	public static function ALIAS($val,$alias){
-		return "$val as $alias";
+	public static function ALIAS_FROM($val,$alias){
+		return "($val) as $alias";
 	}
 
 	public static function GET_ALIAS($table){
@@ -266,7 +266,11 @@ class SQL{
 	}
 
 	public static function UNION($select){
-		return "(".implode(" UNION ",$select).")";
+		return implode(" UNION ",$select);
+	}
+
+	public static function ANNIDATE_FROM($from){
+		return "($from)";
 	}
 
 	public static function SELECT($columns,$from,$exp){
