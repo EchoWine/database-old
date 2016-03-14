@@ -33,6 +33,8 @@ class SQL{
 	const CROSS_JOIN = 'CROSS JOIN';
 	const JOIN = 'JOIN';
 
+	const SELECT_ALL = '*';
+
 
 
 	/**
@@ -247,11 +249,39 @@ class SQL{
 		return "$type $table ".self::ON($on)."";
 	}
 
+	public static function JOINS($joins){
+		return implode(" ",$joins);
+	}
+
 	public static function ON($exp){
 		return !empty($exp) ? " ON $exp" : '';
 	}
 
 	public static function HAVING($exp){
 		return !empty($exp) ? " HAVING $exp" : '';
+	}
+
+	public static function UNION($select){
+		return implode(" UNION ",$select);
+	}
+
+	public static function SELECT($columns,$from,$exp){
+		return "SELECT ".implode(",",$columns)." FROM $from $exp";
+	}
+
+	public static function VALUES($values){
+		return is_array($values) ? "(".implode($values,",").")" :  "($values)";
+	}
+
+	public static function INSERT($table,$columns,$values,$ignore = false){
+		return "INSERT ".($ignore ? 'IGNORE' : '')." INTO $table $columns $values";
+	}
+
+	public static function INSERT_VALUES($values){
+		return "VALUES ".implode($values,",");
+	}
+
+	public static function INSERT_COLUMNS($columns){
+		return empty($columns) ? '' : "(".implode($columns,",").")";
 	}
 }

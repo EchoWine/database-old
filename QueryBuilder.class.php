@@ -34,7 +34,7 @@ class QueryBuilder{
 				$alias = self::getTableAs();
 
 			// Jesk
-			// $v = "(".$table -> getUnionSQL().") as $as";
+			// $v = "(".$table -> SQL_UNION().") as $as";
 
 			$this -> builder -> setPrepare($table -> builder -> getPrepare());
 		}
@@ -865,9 +865,9 @@ class QueryBuilder{
 		if(is_object($data) && ($data instanceof Closure)){
 			$c = $data();
 			$t -> builder -> prepare = array_merge($t -> builder -> prepare,$c -> builder -> prepare);
-			$values = "(".$c -> getUnionSQL().")";
-		
-			$columns = empty($c -> builder -> select) ? '' : "(".implode($c -> builder -> select,",").")";
+
+			$values = DB::SQL()::VALUES($c -> SQL_UNION());
+			$columns = DB::SQL()::INSERT_COLUMNS($c -> builder -> select);
 
 		}else{
 
@@ -881,21 +881,15 @@ class QueryBuilder{
 				foreach($k as $v)
 					$value[] = $t -> setPrepare($v);
 				
-				$values[] = "(".implode($value,",").")";
+				$values[] = DB::SQL()::VALUES($value);
 			}
 
-			$values = "VALUES ".implode($values,",");
-			$columns = "(".implode(array_keys($data[0]),",").")";
+
+			$values = DB::SQL()::INSERT_VALUES($values);
+			$columns = DB::SQL()::INSERT_COLUMNS(array_keys($data[0]));
 		}
-
-
-		$ignore = $ignore ? ' IGNORE ' : '';
 		
-		$q = DB::count($t -> query("
-			INSERT {$ignore} INTO {$this -> getBuilderTable()} 
-			$columns
-			$values
-		"));
+		$q = DB::count($t -> query(DB::SQL()::INSERT($this -> getBuilderTable(),$columns,$values,$ignore)));
 
 		# Get all ID from last Insert
 		# Granted with InnoDB
@@ -1017,7 +1011,7 @@ class QueryBuilder{
 	 *
 	 * @return string SQL code
 	 */
-	public function getGroupBySQL(){
+	public function SQL_GROUPBY(){
 		$s = implode($this -> builder -> groupBy," , ");
 		if(!empty($s))$s = " GROUP BY {$s} ";
 		return $s;
@@ -1040,7 +1034,7 @@ class QueryBuilder{
 	 * @return array result of the query
 	 */
 	public function lists(){
-		$r = $this -> assoc($this -> getUnionSQL());
+		$r = $this -> assoc($this -> SQL_UNION());
 
 		if(!empty($this -> builder -> indexResult)){
 			$s = array();
@@ -1070,17 +1064,17 @@ class QueryBuilder{
 	 *
 	 * @return string SQL code
 	 */
-	public function getUnionSQL(){
+	public function SQL_UNION(){
 
 		$u = $this -> builder -> union;
 		$u[] = $this;
 
-
 		$r = [];
 		foreach($u as $k){
-			$r[] = $k -> getSelectSQL();
+			$r[] = $k -> SQL_SELECT();
 		}
-		return implode($r," UNION ");
+
+		return DB::SQL()::UNION($r);
 	}
 
 	/**
@@ -1088,30 +1082,33 @@ class QueryBuilder{
 	 *
 	 * @return string SQL code
 	 */
-	public function getSelectSQL(){
+	public function SQL_SELECT(){
 
-		if(empty($this -> builder -> select))$this -> builder -> select[] = "*";
-
-		$t = "";
+		if(empty($this -> builder -> select))$this -> builder -> select[] = DB::SQL()::SELECT_ALL;
+		
+		//$t = "";
 		$i = 0;
 
-		$c = "
-			SELECT ".implode($this -> builder -> select,",")." FROM {$this -> getBuilderTable()} 
-			".implode($this -> builder -> join," ")."
-			".$this -> SQL_WHERE()."
-			".$this -> getGroupBySQL()."
-			".$this -> SQL_HAVING()."
-			".$this -> SQL_ORDER_BY()."
-			".$this -> SQL_LIMIT()."
-		";
+		return DB::SQL()::SELECT(
+			$this -> builder -> select,
+			$this -> getBuilderTable(),
+			$this -> SQL_JOIN().
+			$this -> SQL_WHERE().
+			$this -> SQL_GROUPBY().
+			$this -> SQL_HAVING().
+			$this -> SQL_ORDER_BY().
+			$this -> SQL_LIMIT()
+		);
 
-		$t = empty($t) ? $c : "{$t}($c) as tmp".++$i;
+		//$t = empty($t) ? $c : "{$t}($c) as tmp".++$i;
 		
 
 		return $c;
 	}
 
-
+	public function SQL_JOIN(){
+		return DB::SQL()::JOINS($this -> builder -> join);
+	}
 	/**
 	 * Execute a reset query of the counter auto_increment
 	 *
