@@ -273,7 +273,7 @@ class QueryBuilder{
 	 * @return object $this
 	 */
 	public function where($fun_col_value,string $value_op = null,string $value = null){
-		return $this -> location($fun_col_value,$value_op,$value,'andWhere');
+		return $this -> location($fun_col_value,$value_op,$value,'andWhere','SQL_WHERE_EXP');
 	}
 
 	/**
@@ -286,7 +286,7 @@ class QueryBuilder{
 	 * @return object $this
 	 */
 	public function orWhere($fun_col_value,string $value_op = null,string $value = null){
-		return $this -> location($fun_col_value,$value_op,$value,'orWhere');
+		return $this -> location($fun_col_value,$value_op,$value,'orWhere','SQL_WHERE_EXP');
 	}
 
 	
@@ -397,11 +397,14 @@ class QueryBuilder{
 	/**
 	 * Return the SQL code for the condition WHERE
 	 *
-	 * @param bool $where indicates if is necessary add a WHERE comand (true, by default) or not (false)
 	 * @return string SQL code
 	 */
-	private function SQL_WHERE(bool $where = true){
+	private function SQL_WHERE(){
+		return DB::SQL()::WHERE($this -> SQL_WHERE_EXP());
+	}
 
+	private function SQL_WHERE_EXP(){
+		
 		$r = [];
 		if(!empty($this -> builder -> andWhere))
 			$r[] = DB::SQL()::AND($this -> builder -> andWhere);
@@ -409,8 +412,8 @@ class QueryBuilder{
 		if(!empty($this -> builder -> orWhere))
 			$r[] = DB::SQL()::OR($this -> builder -> orWhere);
 
-		$r = DB::SQL()::AND($r);
-		return $where ? DB::SQL()::WHERE($r) : $r;
+		return DB::SQL()::AND($r);
+
 	}
 
 	/**
@@ -421,13 +424,14 @@ class QueryBuilder{
 	 * @param string $value_op if $value is defined indicates the comparison agent, otherwise the value of the column
 	 * @param string $value optional value of the column
 	 * @param string $builder
+	 * @param string $sql name function that will be called to retrieve sql
 	 * @param bool $prepare
 	 * @return object $this
 	 */
-	public function location($fun_col_value,string $value_op = null,string $value = null,$builder,$prepare = true){
+	public function location($fun_col_value,string $value_op = null,string $value = null,$builder,$sql = null,$prepare = true){
 
 		// Se si tratta di un where avanzato
-		if(($r = $this -> locationClosure($fun_col_value,$builder)) !== null)return $r;
+		if(($r = $this -> locationClosure($fun_col_value,$builder,$sql)) !== null)return $r;
 
 		# If only a parameter is defined, get primary key column
 		if($value_op == null)
@@ -441,15 +445,16 @@ class QueryBuilder{
 	 *
 	 * @param Closure $fun function that contains advanced where
 	 * @param string $builder name of part builder that will be used to store result
+	 * @param string $sql name function that will be called to retrieve sql
 	 * @return object $this
 	 */
-	public function locationClosure($fun,$builder){
+	public function locationClosure($fun,$builder,$sql){
 		if($fun instanceof Closure){
 			$n = DB::table($this -> getBuilderTable());
 			$t = clone $this;
 			$n -> builder -> prepare = $t -> builder -> prepare;
 			$n = $fun($n);
-			$sql = $n -> SQL_WHERE(false);
+			$sql = $n -> {$sql}(false);
 
 			if(!empty($sql)){
 				$t -> builder -> {$builder}[] = $sql;
@@ -670,10 +675,6 @@ class QueryBuilder{
 			return $t;
 		}
 
-		$and = [];
-		$or = [];
-
-
 		if(is_object($table_fun) && ($table_fun instanceof Closure)){
 			$n = DB::table($t -> getBuilderTable());
 			$n -> builder -> prepare = $t -> builder -> prepare;
@@ -684,8 +685,6 @@ class QueryBuilder{
 			$t -> builder -> andOn = $n -> builder -> andOn;
 			$t -> builder -> prepare = $n -> builder -> prepare;
 
-			$and = $n -> builder -> andWhere;
-			$or = $n -> builder -> orWhere;
 			if($last == null)$last = $table;
 
 		}else if(!Schema::hasTable($table)){
@@ -721,7 +720,7 @@ class QueryBuilder{
 
 		$t -> builder -> setLastJoinTable($last);
 
-		$t -> builder -> join[] = DB::SQL()::JOIN($ACT,$table,$t -> getOnSQL($and,$or));
+		$t -> builder -> join[] = DB::SQL()::JOIN($ACT,$table,$t -> SQL_ON_EXP());
 
 		$t -> builder -> andOn = [];
 		$t -> builder -> orOn = [];
@@ -730,7 +729,11 @@ class QueryBuilder{
 
 	}
 
-	public function getOnSQL($and = [],$or = []){
+	public function SQL_ON(){
+		return DB::SQL()::ON($this -> SQL_ON_EXP());
+	}
+
+	public function SQL_ON_EXP(){
 
 		$a_and = [];
 		$a_or = [];
@@ -738,21 +741,22 @@ class QueryBuilder{
 		if(!empty($this -> builder -> andOn))
 			$a_and[] = DB::SQL()::AND($this -> builder -> andOn);
 
-		if(!empty($and))
-			$a_and[] = DB::SQL()::AND($and);
+		if(!empty($this -> builder -> andWhere))
+			$a_and[] = DB::SQL()::AND($this -> builder -> andWhere);
 
 		if(!empty($this -> builder -> orOn))
-			$a_or[] =  DB::SQL()::OR($this -> builder -> andOr);
+			$a_or[] =  DB::SQL()::OR($this -> builder -> orOn);
 
-		if(!empty($or))
-			$a_or[] = DB::SQL()::AND($or);
+		if(!empty($this -> builder -> orWhere))
+			$a_or[] = DB::SQL()::OR($this -> builder -> orWhere);
 
 		$s = [];
-		if(!empty($a_or))
-			$s[] = DB::SQL()::OR($a_or);
 
 		if(!empty($a_and))
 			$s[] = DB::SQL()::AND($a_and);
+
+		if(!empty($a_or))
+			$s[] = DB::SQL()::OR($a_or);
 
 		return DB::SQL()::AND($s);
 	}
@@ -761,28 +765,50 @@ class QueryBuilder{
 	 * Add AND ON JOIN
 	 */
 	public function on($col1_fun,string $op_col2 = null,string $col2 = null){
-		return $this -> location($col1_fun,$op_col2,$col2,'andOn',false);
+		return $this -> location($col1_fun,$op_col2,$col2,'andOn','SQL_ON_EXP',false);
 	}
 
 	/**
 	 * Add OR ON JOIN
 	 */
 	public function orOn($col1_fun,string $op_col2 = null,string $col2 = null){
-		return $this -> location($col1_fun,$op_col2,$col2,'orOn',false);
+		return $this -> location($col1_fun,$op_col2,$col2,'orOn','SQL_ON_EXP',false);
 	}
 
 	/**
 	 * Add AND HAVING
 	 */
 	public function having($col1_fun,string $op_col2 = null,string $col2 = null){
-		return $this -> location($col1_fun,$op_col2,$col2,'andHaving');
+		return $this -> location($col1_fun,$op_col2,$col2,'andHaving','SQL_HAVING_EXP');
 	}
 
 	/**
 	 * Add OR HAVING
 	 */
 	public function orHaving($col1_fun,string $op_col2 = null,string $col2 = null){
-		return $this -> location($col1_fun,$op_col2,$col2,'orHaving');
+		return $this -> location($col1_fun,$op_col2,$col2,'orHaving','SQL_HAVING_EXP');
+	}
+
+	/**
+	 * Return the SQL code for the condition WHERE
+	 *
+	 * @return string SQL code
+	 */
+	private function SQL_HAVING(){
+		return DB::SQL()::HAVING($this -> SQL_HAVING_EXP());
+	}
+
+	private function SQL_HAVING_EXP(){
+
+		$r = [];
+
+		if(!empty($this -> builder -> andHaving))
+			$r[] = DB::SQL()::AND($this -> builder -> andHaving);
+
+		if(!empty($this -> builder -> orWhere))
+			$r[] = DB::SQL()::OR($this -> builder -> orHaving);
+
+		return DB::SQL()::AND($r);
 	}
 
 	/**

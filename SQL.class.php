@@ -244,6 +244,14 @@ class SQL{
 	}
 
 	public static function JOIN($type,$table,$on){
-		return "$type $table ON $on";
+		return "$type $table ".self::ON($on)."";
+	}
+
+	public static function ON($exp){
+		return !empty($exp) ? " ON $exp" : '';
+	}
+
+	public static function HAVING($exp){
+		return !empty($exp) ? " HAVING $exp" : '';
 	}
 }
