@@ -155,6 +155,11 @@
 		$q = $q -> whereNotNull('foo');
 		return $q;
 	})
+	-> having(function($q){
+		$q = $q -> orHaving('foo','123');
+		$q = $q -> orHaving('foo','123');
+		return $q;
+	})
 	-> get();
 
 	DB::table('tab1') -> count();

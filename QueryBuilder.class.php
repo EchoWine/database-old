@@ -805,7 +805,7 @@ class QueryBuilder{
 		if(!empty($this -> builder -> andHaving))
 			$r[] = DB::SQL()::AND($this -> builder -> andHaving);
 
-		if(!empty($this -> builder -> orWhere))
+		if(!empty($this -> builder -> orHaving))
 			$r[] = DB::SQL()::OR($this -> builder -> orHaving);
 
 		return DB::SQL()::AND($r);
@@ -1100,6 +1100,7 @@ class QueryBuilder{
 			".implode($this -> builder -> join," ")."
 			".$this -> SQL_WHERE()."
 			".$this -> getGroupBySQL()."
+			".$this -> SQL_HAVING()."
 			".$this -> SQL_ORDER_BY()."
 			".$this -> SQL_LIMIT()."
 		";
