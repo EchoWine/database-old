@@ -15,7 +15,6 @@ class QueryBuilder{
 	 */
 	public $schema;
 
-
 	/**
 	 * Initializes the object, the call is made from the method table of the class Database
 	 * 
@@ -124,7 +123,6 @@ class QueryBuilder{
 		return $this -> selectFunction($v,DB::SQL()::COUNT);
 	}
 
-	
 	/**
 	 * Execute the query and return the lower value in a specific column
 	 *
@@ -289,7 +287,6 @@ class QueryBuilder{
 		return $this -> location($fun_col_value,$value_op,$value,'orWhere','SQL_WHERE_EXP');
 	}
 
-	
 	/**
 	 * Add a condition WHERE IN to the query where the results must have a value of the specific column present on the list of elements
 	 *
@@ -372,7 +369,6 @@ class QueryBuilder{
 	public function orWhereNotNull(string $v){
 		return $this -> locationWhereNotNull($v,'orWhere');
 	}
-
 
 	/**
 	 * Inject a SQL code for obtain a condition AND WHERE to the query 
@@ -729,10 +725,20 @@ class QueryBuilder{
 
 	}
 
+	/**
+	 * Get complete SQL CODE for ON
+	 *
+	 * @return SQL code
+	 */
 	public function SQL_ON(){
 		return DB::SQL()::ON($this -> SQL_ON_EXP());
 	}
 
+	/**
+	 * Get part SQL CODE for ON
+	 *
+	 * @return SQL code
+	 */
 	public function SQL_ON_EXP(){
 
 		$a_and = [];
@@ -903,7 +909,6 @@ class QueryBuilder{
 	 * @param mixed $v2 optional value of the column to update
 	 * @return int number of row involved in the update
 	 */
-
 	public function update($v1,$v2 = NULL){
 
 		if(empty($v1))return 0;
@@ -946,28 +951,22 @@ class QueryBuilder{
 		foreach($v1 as $k => $v){
 
 			if(is_array($v2[$k])){
-				$s = "{$v[1]} = CASE {$v[0]}";
+				$s = [];
 
 				foreach($v2[$k] as $n1 => $k1){
-					$s .= " WHEN ".$t -> setPrepare($n1)." THEN ".$t -> setPrepare($k1)." ";
+					$s[] = DB::SQL()::UPDATE_WHEN($t -> setPrepare($n1),$t -> setPrepare($k1));
 					$where[] = $n1;
 				}
-				$s .= " ELSE {$v[1]} END";
 
-				$set[] = $s;
+				$set[] = DB::SQL()::UPDATE_CASE($v[1],$v[0],$v[1],$s);
 			}else{
-				$set[] = "{$v} = ".$t -> setPrepare($v2[$k]);
+				$set[] = DB::SQL()::UPDATE_VALUE($v,$t -> setPrepare($v2[$k]));
 			}
 		}
 
-
-		$q = $t -> query("
-			UPDATE {$this -> getBuilderTable()} 
-			".implode($t -> builder -> join," ")."
-			SET
-			".implode($set,",")." 
-			".$t -> SQL_WHERE()."
-		");
+		$q = $t -> query(
+			DB::SQL()::UPDATE($this -> getBuilderTable(),$this -> SQL_JOIN(),$set,$this -> SQL_WHERE())
+		);
 
 		$r = DB::count($q);
 
@@ -978,15 +977,17 @@ class QueryBuilder{
 	/**
 	 * Execute the query and delete the selected records
 	 *
-	 * @param string $v optional indicates the name of the table from which delete the records (used in the join)
+	 * @param string $delete optional indicates the name of the table from which delete the records (used in the join)
 	 * @return int number of rows involved in the elimination
 	 */
-	public function delete(string $v = ''){
-		return $this -> query("
-			DELETE {$v} FROM {$this -> getBuilderTable()} 
-			".implode($this -> builder -> join," ")."
-			".$this -> SQL_WHERE()."
-		");
+	public function delete(string $delete = ''){
+		return $this -> query(
+			DB::SQL()::DELETE(
+			$delete,
+			$this -> getBuilderTable(),
+			$this -> SQL_JOIN(),
+			$this -> SQL_WHERE()
+		));
 	}
 
 	/**
@@ -1008,9 +1009,7 @@ class QueryBuilder{
 	 * @return string SQL code
 	 */
 	public function SQL_GROUPBY(){
-		$s = implode($this -> builder -> groupBy," , ");
-		if(!empty($s))$s = " GROUP BY {$s} ";
-		return $s;
+		return DB::SQL()::GROUP_BY($this -> builder -> groupBy);
 	}
 	
 	/**
@@ -1102,16 +1101,22 @@ class QueryBuilder{
 		return $c;
 	}
 
+	/**
+	 * Get SQL CODE for joins
+	 *
+	 * @return SQL code
+	 */
 	public function SQL_JOIN(){
 		return DB::SQL()::JOINS($this -> builder -> join);
 	}
+
 	/**
 	 * Execute a reset query of the counter auto_increment
 	 *
 	 * @return object result of the query
 	 */
 	public function resetAutoIncrement(){
-		return $this -> query("ALTER TABLE {$this -> getBuilderTable()} AUTO_INCREMENT = 1");
+		return $this -> query(DB::SQL()::RESET_AUTOINCREMENT($this -> getBuilderTable()));
 	}
 	
 	/**

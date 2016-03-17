@@ -187,6 +187,10 @@ class SQL{
 		return "$column DESC";
 	}	
 
+	public static function GROUP_BY($columns){
+		return empty($columns) ? '' : ' GROUP BY '.implode(' , ',$columns);
+	}
+
 	public static function ORDER_BY($columns){
 		return empty($columns) ? '' : ' ORDER BY '.implode(' , ',$columns);
 	}	
@@ -298,5 +302,21 @@ class SQL{
 	}
 	public static function UPDATE($table,$join,$set,$where){
 		return "UPDATE $table $join SET ".implode(",",$set)." $where";
+	}
+
+	public static function UPDATE_WHEN($when,$then){
+		return " WHEN $when THEN $then ";
+	}
+
+	public static function UPDATE_CASE($column,$case,$default,$when){
+		return "$column = CASE $case ".implode(" ",$when)." ELSE $default END";
+	}
+
+	public static function RESET_AUTOINCREMENT($tableName){
+		return "ALTER TABLE {$tableName} AUTO_INCREMENT = 1";
+	}
+
+	public static function DELETE($delete,$nameTable,$join,$where){
+		return "DELETE $delete FROM $nameTable $join $where";
 	}
 }
