@@ -911,21 +911,17 @@ class QueryBuilder{
 		$t = clone $this;
 
 		if(!is_array($v1) && isset($v2)){
-			$kf = array("$v1 = ".$t -> setPrepare($v2));
+			$set = [DB::SQL()::UPDATE_VALUE($v1,$t -> setPrepare($v2))];
 		}else{
-			$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
+			$set = empty($t -> builder -> update) ? [] : $t -> builder -> update;
 			foreach($v1 as $k => $v){
-				$kf[] = "$k = ".$t -> setPrepare($v);
+				$set[] = DB::SQL()::UPDATE_VALUE($k,$t -> setPrepare($v));
 			}
 		}
 
-		$q = $t -> query("
-			UPDATE {$this -> getBuilderTable()} 
-			".implode($t -> builder -> join," ")."
-			SET
-			".implode($kf,",")." 
-			".$this -> SQL_WHERE()."
-		");
+		$q = $t -> query(
+			DB::SQL()::UPDATE($this -> getBuilderTable(),$this -> SQL_JOIN(),$set,$this -> SQL_WHERE())
+		);
 
 
 		$r = DB::count($q);
@@ -945,7 +941,7 @@ class QueryBuilder{
 		if(empty($v1) || empty($v2))return false;
 
 		$t = clone $this;
-		$kf = empty($t -> builder -> update) ? array() : $t -> builder -> update;
+		$set = empty($t -> builder -> update) ? [] : $t -> builder -> update;
 		
 		foreach($v1 as $k => $v){
 
@@ -958,9 +954,9 @@ class QueryBuilder{
 				}
 				$s .= " ELSE {$v[1]} END";
 
-				$kf[] = $s;
+				$set[] = $s;
 			}else{
-				$kf[] = "{$v} = ".$t -> setPrepare($v2[$k]);
+				$set[] = "{$v} = ".$t -> setPrepare($v2[$k]);
 			}
 		}
 
@@ -969,7 +965,7 @@ class QueryBuilder{
 			UPDATE {$this -> getBuilderTable()} 
 			".implode($t -> builder -> join," ")."
 			SET
-			".implode($kf,",")." 
+			".implode($set,",")." 
 			".$t -> SQL_WHERE()."
 		");
 

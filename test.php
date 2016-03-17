@@ -18,30 +18,13 @@
 
 	]);
 
-
-
-	/*
-	DB::schema('tab1') -> id() -> alter();
-	DB::schema('tab1') -> string('username',30) -> alter();
-
-
-	DB::schema('tab2') -> id() -> alter();
-	DB::schema('tab2') -> bigint('tab1_id') -> foreign('tab1','id')  -> alter();
-	*/
-
-	//DB::table('tab1') -> insert(['username' => 'mario']);
-
-	// $q = DB::table('tab1') -> join('tab2') -> get();
-
-
-
 	DB::startLog();
 
 	DB::schema('tab1',function($tab){
 		$tab -> id();
 		$tab -> string('name') -> unique();
 		$tab -> string('foo') -> null();
-		$tab -> string('fo1o') -> default('abcde') -> null();
+		$tab -> string('foDo') -> default('abcde') -> null();
 		$tab -> int('fo1os');
 	});
 
@@ -146,7 +129,7 @@
 	-> union(DB::table('tab1'))
 	-> get();
 
-	DB::table('tab1')
+	DB::table('tab1 as r')
 	-> orWhere(function($q){
 		$q = $q -> orWhere('foo','123');
 		$q = $q -> orWhereIn('foo',['123']);
@@ -173,12 +156,24 @@
 	DB::table('tab1') -> count();
 	DB::table('tab1') -> max('id');
 	DB::table('tab1') -> min('id');
-	DB::table('tab1') -> avg('id') ;
+	DB::table('tab1') -> avg('id');
 
-	DB::schema('tab3') -> drop();
-	DB::schema('tab1') -> drop();
-	DB::schema('tab2') -> drop();
-	DB::schema('tab3_tab2') -> drop();
+	DB::table('tab1') -> where('id',1) -> update('foo','bla');
+	DB::table('tab1') -> where('id',1) -> update(['foo' => 'bla']);
+
+	DB::table('tab1') -> where('id',1) -> updateMultiple(
+	[
+		['id','foo']
+
+	],
+	[
+		[
+			0 => 'bla',
+			1 => 'cia'
+		]
+	]
+	);
+
 
 	// End all schema
 	DB::dropMissing();

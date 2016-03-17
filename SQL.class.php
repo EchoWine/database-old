@@ -292,4 +292,11 @@ class SQL{
 	public static function INSERT_COLUMNS($columns){
 		return empty($columns) ? '' : "(".implode($columns,",").")";
 	}
+
+	public static function UPDATE_VALUE($column,$value){
+		return "$column = $value";
+	}
+	public static function UPDATE($table,$join,$set,$where){
+		return "UPDATE $table $join SET ".implode(",",$set)." $where";
+	}
 }

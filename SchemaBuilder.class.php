@@ -52,6 +52,9 @@ class SchemaBuilder{
 		return $this;
 	}
 	
+	/**
+	 * Execute a query
+	 */
 	public function query($q){
 
 		return DB::query($q);
@@ -65,7 +68,6 @@ class SchemaBuilder{
 	public function getTable(){
 		return $this -> table;
 	}
-
 
 	/**
 	 * Execute a reserch query of the number of the columns
@@ -314,6 +316,7 @@ class SchemaBuilder{
 	public function alter(){
 		if(!DB::getAlterSchema()) return;
 
+
 		$new = false;
 
 
@@ -453,10 +456,8 @@ class SchemaBuilder{
 			# Update Schema actual
 			Schema::getTable($this -> getTable()) -> setColumn(clone $n);
 
-			return true;
 		}
 
-		return false;
 	}
 
 
