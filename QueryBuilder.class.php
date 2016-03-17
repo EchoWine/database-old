@@ -610,20 +610,12 @@ class QueryBuilder{
 	/**
 	 * Add a CROSS JOIN with an other table
 	 *
-	 * @param string $t name of the second table
-	 * @param string $v1 name of the column of the primary table
-	 * @param string $v2 if $v3 is defined indicates the comparison agent between the columns, otherwise indicates the name of the column of the second table
-	 * @param string $v3 optional name of the column of the second table
+	 * @param string $table name of the second table
 	 * @return object $this
 	 */
-	public function crossJoin($table,$table2_col1 = null,string $op_col2 = null,string $col2 = NULL){
+	public function crossJoin($table,$fun = null){
 
-		if($op_col2 !== null){
-			$this -> on($table2_col1,$op_col2,$col2);
-			$table2_col1 = null;
-		}
-
-		return $this -> _join(DB::SQL()::CROSS_JOIN,$table,$table2_col1,null,false);
+		return $this -> _join(DB::SQL()::CROSS_JOIN,$table,$fun,null,false);
 	}
 
 	/**
@@ -686,31 +678,35 @@ class QueryBuilder{
 		}else if(!Schema::hasTable($table)){
 			die("Schema: $table doesn't exists");
 		}
-
-		if($on && empty($t -> builder -> orOn) && empty($t -> builder -> andOn)){
+		if(empty($t -> builder -> orOn) && empty($t -> builder -> andOn)){
 			
 			list($table_g,$table_alias) = DB::SQL()::GET_ALIAS($table);
-			list($s_last_g,$s_last_alias) = DB::SQL()::GET_ALIAS($s_last);
+			if($on){
 
-			$k1 = Schema::getTable($table_g) -> getForeignKeyTo($s_last_g);
-			$k2 = Schema::getTable($s_last_g) -> getForeignKeyTo($table_g);
+				list($s_last_g,$s_last_alias) = DB::SQL()::GET_ALIAS($s_last);
 
-			if($k1 !== null)
-				$k = $k1;
-			
-			else if($k2 !== null)
-				$k = $k2;
-			
-			else{
-				die("<br>\nCannot relate $s_last with $table: Error with foreign key\n<br>");
+				$k1 = Schema::getTable($table_g) -> getForeignKeyTo($s_last_g);
+				$k2 = Schema::getTable($s_last_g) -> getForeignKeyTo($table_g);
+
+				if($k1 !== null)
+					$k = $k1;
+				
+				else if($k2 !== null)
+					$k = $k2;
+				
+				else{
+					die("<br>\nCannot relate $s_last with $table: Error with foreign key\n<br>");
+				}
+				
+				$c1 = ($k1 == null ? $table_alias : $s_last_alias).".".$k -> getForeignColumn();
+				$c2 = ($k1 !== null ? $table_alias : $s_last_alias).".".$k -> getName();
+
+				$t = $t -> on($c1,'=',$c2);
+
+				$last = $k1 != null ? $table : $s_last;
+			}else{
+				$last = $table_g;
 			}
-			
-			$c1 = ($k1 == null ? $table_alias : $s_last_alias).".".$k -> getForeignColumn();
-			$c2 = ($k1 !== null ? $table_alias : $s_last_alias).".".$k -> getName();
-
-			$t = $t -> on($c1,'=',$c2);
-
-			$last = $k1 != null ? $table : $s_last;
 
 		}
 

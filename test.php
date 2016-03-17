@@ -103,12 +103,12 @@
  		return $q;
 
  	}) -> join('tab3') -> get();
-
- 	/*
- 	DB::table('tab2 as tb2')
+ 	
+ 	DB::table('tab2')
  	-> crossJoin('tab3_tab2')
- 	-> join('tab3') -> get();
- 	*/
+ 	-> join('tab3')
+ 	-> get();
+ 	
  
  	/*
  	DB::table('tab1') -> insert(function(){

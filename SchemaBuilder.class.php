@@ -166,7 +166,7 @@ class SchemaBuilder{
 	 * @return object $this
 	 */
 	public function md5($name){
-		return $this -> varchar($name,32);
+		return $this -> string($name,32);
 	}
 
 	/**
