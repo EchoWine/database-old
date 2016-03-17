@@ -124,7 +124,7 @@
 	DB::table(function(){
 		return DB::table(function(){
 			return DB::table('tab1');
-		});
+		},'w43');
 	})
 	-> union(DB::table('tab1'))
 	-> get();

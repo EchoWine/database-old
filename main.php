@@ -9,5 +9,5 @@
 	include dirname(__FILE__).'/QueryBuilder.class.php';
 	include dirname(__FILE__).'/SQL.class.php';
 	include dirname(__FILE__).'/MYSQL.class.php';
-
+	
 ?>

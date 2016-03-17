@@ -35,8 +35,6 @@ class SQL{
 
 	const SELECT_ALL = '*';
 
-
-
 	/**
 	 * @return string get all the tables
 	 */
@@ -222,11 +220,11 @@ class SQL{
 	}
 
 	public static function AND($exp){
-		return !empty($exp) ? "(".implode(" AND ",$exp).")" : '';
+		return !empty($exp) ? (count($exp) > 1 ? "(" : "").implode(" AND ",$exp).(count($exp) > 1 ? ")" : "") : '';
 	}
 
 	public static function OR($exp){
-		return !empty($exp) ? "(".implode(" OR ",$exp).")" : '';
+		return !empty($exp) ? (count($exp) > 1 ? "(" : "").implode(" OR ",$exp).(count($exp) > 1 ? ")" : "") : '';
 	}
 
 	public static function WHERE($val){

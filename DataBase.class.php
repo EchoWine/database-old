@@ -470,8 +470,8 @@ class DB{
 	 * @param string|array|closure $table
 	 * @return object QueryBuilder object
 	 */
-	public static function table($table){
-		return new QueryBuilder($table);
+	public static function table($table,$alias = NULL){
+		return new QueryBuilder($table,$alias);
 	}
 
 	/**
