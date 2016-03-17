@@ -915,60 +915,42 @@ class QueryBuilder{
 
 		$t = clone $this;
 
-		if(!is_array($v1) && isset($v2)){
-			$set = [DB::SQL()::UPDATE_VALUE($v1,$t -> setPrepare($v2))];
+		$set = empty($t -> builder -> update) ? [] : $t -> builder -> update;
+
+		# Update multiple records in different case
+		if(is_array($v1) && is_array($v2)){
+
+			foreach($v1 as $k => $v){
+
+				if(is_array($v2[$k])){
+					$s = [];
+
+					foreach($v2[$k] as $n1 => $k1){
+						$s[] = DB::SQL()::UPDATE_WHEN($t -> setPrepare($n1),$t -> setPrepare($k1));
+						$where[] = $n1;
+					}
+
+					$set[] = DB::SQL()::UPDATE_CASE($v[1],$v[0],$v[1],$s);
+				}else{
+					$set[] = DB::SQL()::UPDATE_VALUE($v,$t -> setPrepare($v2[$k]));
+				}
+			}
+
+		# Update single column
+		}else if(!is_array($v1) && isset($v2)){
+			$set[] = DB::SQL()::UPDATE_VALUE($v1,$t -> setPrepare($v2));
+
+		# Update multiple column
 		}else{
-			$set = empty($t -> builder -> update) ? [] : $t -> builder -> update;
 			foreach($v1 as $k => $v){
 				$set[] = DB::SQL()::UPDATE_VALUE($k,$t -> setPrepare($v));
 			}
 		}
-
-		$q = $t -> query(
-			DB::SQL()::UPDATE($this -> getBuilderTable(),$this -> SQL_JOIN(),$set,$this -> SQL_WHERE())
-		);
-
-
-		$r = DB::count($q);
-
-		return ($r == 0 && $q) ? 1 : $r;
-
-	}
-
-	/**
-	 * Execute the query and update the records
-	 *
-	 * @param array $v1 array of columns to update in base a specific condition
-	 * @param array $v2 value of the column to update
-	 * @return int number of row involved in the update
-	 */
-	public function updateMultiple(array $v1,array $v2){
-		if(empty($v1) || empty($v2))return false;
-
-		$t = clone $this;
-		$set = empty($t -> builder -> update) ? [] : $t -> builder -> update;
 		
-		foreach($v1 as $k => $v){
 
-			if(is_array($v2[$k])){
-				$s = [];
-
-				foreach($v2[$k] as $n1 => $k1){
-					$s[] = DB::SQL()::UPDATE_WHEN($t -> setPrepare($n1),$t -> setPrepare($k1));
-					$where[] = $n1;
-				}
-
-				$set[] = DB::SQL()::UPDATE_CASE($v[1],$v[0],$v[1],$s);
-			}else{
-				$set[] = DB::SQL()::UPDATE_VALUE($v,$t -> setPrepare($v2[$k]));
-			}
-		}
-
-		$q = $t -> query(
+		$r = DB::count($q = $t -> query(
 			DB::SQL()::UPDATE($this -> getBuilderTable(),$this -> SQL_JOIN(),$set,$this -> SQL_WHERE())
-		);
-
-		$r = DB::count($q);
+		));
 
 		return ($r == 0 && $q) ? 1 : $r;
 
@@ -1079,11 +1061,6 @@ class QueryBuilder{
 	 */
 	public function SQL_SELECT(){
 
-		if(empty($this -> builder -> select))$this -> builder -> select[] = DB::SQL()::SELECT_ALL;
-
-		//$t = "";
-		$i = 0;
-
 		return DB::SQL()::SELECT(
 			$this -> builder -> select,
 			$this -> getBuilderTable(),
@@ -1095,10 +1072,6 @@ class QueryBuilder{
 			$this -> SQL_LIMIT()
 		);
 
-		//$t = empty($t) ? $c : "{$t}($c) as tmp".++$i;
-		
-
-		return $c;
 	}
 
 	/**

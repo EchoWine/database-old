@@ -161,7 +161,7 @@
 	DB::table('tab1') -> where('id',1) -> update('foo','bla');
 	DB::table('tab1') -> where('id',1) -> update(['foo' => 'bla']);
 
-	DB::table('tab1') -> where('id',1) -> updateMultiple(
+	DB::table('tab1') -> where('id',1) -> update(
 	[
 		['id','foo']
 

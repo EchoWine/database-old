@@ -276,6 +276,9 @@ class SQL{
 	}
 
 	public static function SELECT($columns,$from,$exp){
+
+		if(empty($columns))$columns[] = self::SELECT_ALL;
+
 		return "SELECT ".implode(",",$columns)." FROM $from $exp";
 	}
 
