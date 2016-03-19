@@ -187,7 +187,7 @@ class QueryBuilder{
 	 * @param string $v name of the column
 	 * @return object $this
 	 */
-	public function orderBy(string $c){
+	public function orderByAsc(string $c){
 		$this -> builder -> orderby[] = DB::SQL()::ASC($c);
 		return $this;
 	}
