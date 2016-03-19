@@ -136,6 +136,8 @@
 		$q = $q -> orWhereLike('foo','%123%');
 		$q = $q -> orWhereNull('foo');
 		$q = $q -> orWhereNotNull('foo');
+		$q = $q -> orWhereNotBetween('foo',[1,10]);
+		$q = $q -> orWhereBetween('foo',[1,10]);
 		return $q;
 	})
 	-> orWhere(function($q){
@@ -144,11 +146,28 @@
 		$q = $q -> whereLike('foo','%123%');
 		$q = $q -> whereNull('foo');
 		$q = $q -> whereNotNull('foo');
+		$q = $q -> whereNotBetween('foo',[1,10]);
+		$q = $q -> whereBetween('foo',[1,10]);
 		return $q;
 	})
-	-> having(function($q){
+	-> orHaving(function($q){
 		$q = $q -> orHaving('foo','123');
-		$q = $q -> orHaving('foo','123');
+		$q = $q -> orHavingIn('foo',['123']);
+		$q = $q -> orHavingLike('foo','%123%');
+		$q = $q -> orHavingNull('foo');
+		$q = $q -> orHavingNotNull('foo');
+		$q = $q -> orHavingNotBetween('foo',[1,10]);
+		$q = $q -> orHavingBetween('foo',[1,10]);
+		return $q;
+	})
+	-> orHaving(function($q){
+		$q = $q -> having('foo','123');
+		$q = $q -> havingIn('foo',['123']);
+		$q = $q -> havingLike('foo','%123%');
+		$q = $q -> havingNull('foo');
+		$q = $q -> havingNotNull('foo');
+		$q = $q -> havingNotBetween('foo',[1,10]);
+		$q = $q -> havingBetween('foo',[1,10]);
 		return $q;
 	})
 	-> get();

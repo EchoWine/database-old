@@ -320,4 +320,12 @@ class SQL{
 	public static function DELETE($delete,$nameTable,$join,$where){
 		return "DELETE $delete FROM $nameTable $join $where";
 	}
+
+	public static function BETWEEN($column,$value_from,$value_to){
+		return "$column BETWEEN $value_from AND $value_to";
+	}
+
+	public static function NOT_BETWEEN($column,$value_from,$value_to){
+		return "$column NOT BETWEEN $value_from AND $value_to";
+	}
 }

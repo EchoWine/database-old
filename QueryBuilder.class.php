@@ -338,7 +338,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function whereNull(string $v){
-		return $this -> locationWhereNull($v,'andWhere');
+		return $this -> locationNull($v,'andWhere');
 	}
 	
     /**
@@ -347,7 +347,7 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereNull(string $v){
-		return $this -> locationWhereNull($v,'orWhere');
+		return $this -> locationNull($v,'orWhere');
 	}
 
 	/**
@@ -357,7 +357,7 @@ class QueryBuilder{
 	 * @return object clone of $this
      */
 	public function whereNotNull(string $v){
-		return $this -> locationWhereNotNull($v,'andWhere');
+		return $this -> locationNotNull($v,'andWhere');
 	}
 	
 	/**
@@ -367,7 +367,51 @@ class QueryBuilder{
 	 * @return object clone of $this
 	 */
 	public function orWhereNotNull(string $v){
-		return $this -> locationWhereNotNull($v,'orWhere');
+		return $this -> locationNotNull($v,'orWhere');
+	}
+
+	/**
+	 * Add a condition AND WHERE BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function whereBetween($column,$values){
+		return $this -> locationBetween($column,$values,'andWhere');
+	}
+
+	/**
+	 * Add a condition OR WHERE BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function orWhereBetween($column,$values){
+		return $this -> locationBetween($column,$values,'orWhere');
+	}
+
+	/**
+	 * Add a condition AND WHERE NOT BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function whereNotBetween($column,$values){
+		return $this -> locationNotBetween($column,$values,'andWhere');
+	}
+
+	/**
+	 * Add a condition OR WHERE NOT BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function orWhereNotBetween($column,$values){
+		return $this -> locationNotBetween($column,$values,'orWhere');
 	}
 
 	/**
@@ -511,7 +555,7 @@ class QueryBuilder{
 	 * @param string $builder
 	 * @return object clone of $this
      */
-	public function locationWhereNull($v,$builder){
+	public function locationNull($v,$builder){
 		return $this -> builderRaw(DB::SQL()::IS_NULL($v),$builder);
 	}
 
@@ -522,8 +566,33 @@ class QueryBuilder{
 	 * @param string $builder
 	 * @return object clone of $this
      */
-	public function locationWhereNotNull($v,$builder){
+	public function locationNotNull($v,$builder){
 		return $this -> builderRaw(DB::SQL()::IS_NOT_NULL($v),$builder);
+	}
+
+	/**
+	 * Add a condition $builder BETWEEN
+	 *
+	 * @param string $column name of the column
+	 * @param array $values 
+	 * @param string $builder
+	 * @return object clone of $this
+     */
+	public function locationBetween($column,$values,$builder){
+		return $this -> builderRaw(DB::SQL()::BETWEEN($column,$values[0],$values[1]),$builder);
+	}
+
+
+	/**
+	 * Add a condition $builder NOT BETWEEN
+	 *
+	 * @param string $column name of the column
+	 * @param array $values 
+	 * @param string $builder
+	 * @return object clone of $this
+     */
+	public function locationNotBetween($column,$values,$builder){
+		return $this -> builderRaw(DB::SQL()::NOT_BETWEEN($column,$values[0],$values[1]),$builder);
 	}
 
 	/**
@@ -789,6 +858,133 @@ class QueryBuilder{
 	 */
 	public function orHaving($col1_fun,string $op_col2 = null,string $col2 = null){
 		return $this -> location($col1_fun,$op_col2,$col2,'orHaving','SQL_HAVING_EXP');
+	}
+
+	/**
+	 * Add a condition WHERE IN to the query where the results must have a value of the specific column present on the list of elements
+	 *
+	 * @param string $v name of the column
+	 * @param array $a array of accepted values
+	 * @return object clone of $this
+	 */
+	public function havingIn(string $v,array $a){
+		return $this -> locationIn($v,$a,'andHaving');
+	}
+
+	/**
+	 * Add a condition OR WHERE IN to the query where the results must have a value of the specific column present on the list of elements
+	 *
+	 * @param string $v name of the column
+	 * @param array $a array of accepted values
+	 * @return object clone of $this
+	 */
+	public function orHavingIn(string $v,array $a){
+		return $this -> locationIn($v,$a,'orHaving');
+	}
+
+	/**
+	 * Add a condition WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
+	 *
+	 * @param string $v1 name of the column
+	 * @param string $v2 reserched value
+	 * @return object clone of $this
+	 */
+	public function havingLike(string $v1,string $v2){
+		return $this -> locationLike($v1,$v2,'andHaving');
+	}
+
+	/**
+	 * Add a condition OR WHERE LIKE to the query where the results must have a value of the specific column present on the list of elements
+	 *
+	 * @param string $v1 name of the column
+	 * @param string $v2 reserched value
+	 * @return object clone of $this
+	 */
+	public function orHavingLike(string $v1,string $v2){
+		return $this -> locationLike($v1,$v2,'orHaving');
+	}
+
+	/**
+	 * Add a condition WHERE NULL to the query where the results must have a null value in the column
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
+	 */
+	public function havingNull(string $v){
+		return $this -> locationNull($v,'andHaving');
+	}
+	
+    /**
+	 * Add a condition OR WHERE IS NULL to the query where the results must have a null value in the column
+	 * @param string $v name of the column
+	 * @return object clone of $this
+	 */
+	public function orHavingNull(string $v){
+		return $this -> locationNull($v,'orHaving');
+	}
+
+	/**
+	 * Add a condition WHERE IS NOT NULL to the query where the results must not have a null value in the column
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
+     */
+	public function havingNotNull(string $v){
+		return $this -> locationNotNull($v,'andHaving');
+	}
+	
+	/**
+	 * Add a condition OR WHERE IS NOT NULL to the query where the results must not have a null value in the column
+	 *
+	 * @param string $v name of the column
+	 * @return object clone of $this
+	 */
+	public function orHavingNotNull(string $v){
+		return $this -> locationNotNull($v,'orHaving');
+	}
+
+	/**
+	 * Add a condition AND HAVING BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function havingBetween($column,$values){
+		return $this -> locationBetween($column,$values,'orHaving');
+	}
+
+	/**
+	 * Add a condition OR HAVING BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function orHavingBetween($column,$values){
+		return $this -> locationBetween($column,$values,'orHaving');
+	}
+
+	/**
+	 * Add a condition AND HAVING NOT BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function havingNotBetween($column,$values){
+		return $this -> locationNotBetween($column,$values,'orHaving');
+	}
+
+	/**
+	 * Add a condition OR HAVING NOT BETWEEN
+	 *
+	 * @param string $column
+	 * @param array $values
+	 * @return object clone of $this
+	 */
+	public function orHavingNotBetween($column,$values){
+		return $this -> locationNotBetween($column,$values,'orHaving');
 	}
 
 	/**
