@@ -12,17 +12,13 @@
 		'charset' => 'utf8',
 		'restore' => 0,
 		'alter_schema' => true,
-
-		# 0: Do nothing, 1: Log, 2: Log + Backup
-		'alter_schema_sec' => 0,
-
 	]);
 
 	DB::startLog();
 
-	DB::schema('tab1',function($tab){
+	DB::schema('Tab1',function($tab){
 		$tab -> id();
-		$tab -> string('name') -> unique();
+		$tab -> string('Name') -> unique();
 		$tab -> string('foo') -> null();
 		$tab -> string('foDo') -> default('abcde') -> null();
 		$tab -> int('fo1os');

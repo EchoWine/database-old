@@ -582,7 +582,6 @@ class QueryBuilder{
 		return $this -> builderRaw(DB::SQL()::BETWEEN($column,$values[0],$values[1]),$builder);
 	}
 
-
 	/**
 	 * Add a condition $builder NOT BETWEEN
 	 *

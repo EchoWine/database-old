@@ -23,7 +23,7 @@ class SchemaTable{
 	 */
 	public function __construct($name,$columns = []){
 
-		$this -> name = $name;
+		$this -> name = strtolower($name);
 		$this -> columns = $columns;
 	}	
 

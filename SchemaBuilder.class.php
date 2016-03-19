@@ -34,8 +34,8 @@ class SchemaBuilder{
 	 */
 	public function __construct($table,$columns = null){
 
+		$table = strtolower($table);
 		$this -> table = $table;
-
 		if(!isset(self::$tables[$table])){
 			$s = new SchemaTable($table);
 			self::$tables[$table] = $s;
@@ -327,6 +327,7 @@ class SchemaBuilder{
 			$this -> query(DB::SQL()::CREATE_TABLE($this -> getTable(),[$this -> SQL_column($this -> schema)]));
 
 			# Update table schema
+
 			Schema::addTable($this -> getTable());
 			Schema::getTable($this -> getTable()) -> addColumn(clone $this -> schema);
 			$new = true;
