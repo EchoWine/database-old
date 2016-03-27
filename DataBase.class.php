@@ -1,5 +1,9 @@
 <?php
 
+namespace CoreWine;
+
+use PDO;
+use PDOStatement;
 /**
  * Database, permits to handle connections and calls to DataBase with PDO
  */
@@ -90,7 +94,7 @@ class DB{
 	 * @return SQL
 	 */
 	public static function SQL(){
-		return self::$sql;
+		return __NAMESPACE__."\\".self::$sql;
 	}
 	
 	/**

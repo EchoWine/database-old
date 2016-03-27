@@ -1,5 +1,9 @@
 <?php
 
+namespace CoreWine;
+
+use Closure;
+
 /**
  * Query Builder
  */

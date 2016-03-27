@@ -2,6 +2,7 @@
 	
 	include dirname(__FILE__).'/main.php';
 
+	use CoreWine\DB as DB;
 
 	DB::connect([
 		'driver' => 'mysql',

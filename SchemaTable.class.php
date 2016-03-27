@@ -1,5 +1,7 @@
 <?php
 
+namespace CoreWine;
+
 /**
  * Schema Table
  */
